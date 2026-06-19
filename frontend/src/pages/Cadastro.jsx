@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Cadastro() {
   const [nome, setNome] = useState("");
@@ -17,8 +17,14 @@ export default function Cadastro() {
     setSucesso("");
     setCarregando(true);
 
+    if (!nome || !email || !senha) {
+      setErro("❌ Preencha todos os campos!");
+      setCarregando(false);
+      return;
+    }
+
     try {
-      // Disparando para a rota de cadastro que já criamos no Node.js
+      // ⚠️ Certifique-se de usar a URL real do seu backend no Render aqui!
       const resposta = await fetch("https://devlaunch-backend-uw21.onrender.com/api/auth/cadastro", {
         method: "POST",
         headers: {
@@ -30,18 +36,23 @@ export default function Cadastro() {
       const dados = await resposta.json();
 
       if (!resposta.ok) {
-        throw new Error(dados.erro || "Erro ao criar conta.");
+        throw new Error(dados.erro || "Falha ao criar conta.");
       }
 
-      setSucesso("Conta criada com sucesso! Redirecionando para o login...");
-      
-      // Espera 2 segundos para o usuário ler a mensagem de sucesso e joga pro Login
+      setSucesso("🚀 Conta criada com sucesso! Redirecionando...");
+
+      // 🎯 AQUI ESTÁ A MÁGICA: Guardando os 3 dados cruciais no navegador
+      localStorage.setItem("usuario_id", dados.usuario.id);
+      localStorage.setItem("usuario_nome", dados.usuario.nome);
+      localStorage.setItem("usuario_email", dados.usuario.email); 
+
+      // Aguarda 1.5 segundos para o usuário ver a mensagem de sucesso e redireciona
       setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+        navigate("/dashboard");
+      }, 1500);
 
     } catch (err) {
-      setErro(err.message);
+      setErro(`❌ ${err.message}`);
     } finally {
       setCarregando(false);
     }
@@ -49,62 +60,54 @@ export default function Cadastro() {
 
   return (
     <div style={styles.container}>
-      <button onClick={() => navigate("/")} style={styles.backButton}>← Voltar ao início</button>
-
       <div style={styles.card}>
-        <h2 style={styles.title}>Crie sua conta 🚀</h2>
-        <p style={styles.subtitle}>Faça parte do DevLaunch e comece a gerar projetos</p>
+        <h2 style={styles.title}>Criar Conta no DevLaunch 🚀</h2>
+        <p style={styles.subtitle}>Comece a gerar seus templates em segundos</p>
 
-        {erro && <div style={styles.errorBox}>{erro}</div>}
-        {sucesso && <div style={styles.successBox}>{sucesso}</div>}
-
-        <form onSubmit={handleCadastro}>
+        <form onSubmit={handleCadastro} style={styles.form}>
           <div style={styles.inputGroup}>
             <label style={styles.label}>Nome Completo</label>
-            <input 
-              type="text" 
-              placeholder="Seu nome" 
-              style={styles.input}
+            <input
+              type="text"
+              placeholder="Seu nome"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              required
-              disabled={carregando}
+              style={styles.input}
             />
           </div>
 
           <div style={styles.inputGroup}>
             <label style={styles.label}>E-mail</label>
-            <input 
-              type="email" 
-              placeholder="seuemail@exemplo.com" 
-              style={styles.input}
+            <input
+              type="email"
+              placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={carregando}
+              style={styles.input}
             />
           </div>
 
           <div style={styles.inputGroup}>
             <label style={styles.label}>Senha</label>
-            <input 
-              type="password" 
-              placeholder="Escolha uma senha segura" 
-              style={styles.input}
+            <input
+              type="password"
+              placeholder="Sua senha secreta"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
-              required
-              disabled={carregando}
+              style={styles.input}
             />
           </div>
 
-          <button type="submit" style={styles.button} disabled={carregando}>
-            {carregando ? "Criando conta..." : "Cadastrar no DevLaunch"}
+          <button type="submit" disabled={carregando} style={styles.btn}>
+            {carregando ? "Criando conta..." : "Registrar e Entrar"}
           </button>
         </form>
 
+        {erro && <p style={styles.error}>{erro}</p>}
+        {sucesso && <p style={styles.success}>{sucesso}</p>}
+
         <p style={styles.footerText}>
-          Já tem uma conta? <span onClick={() => navigate("/login")} style={styles.link}>Faça login</span>
+          Já tem uma conta? <Link to="/login" style={styles.link}>Faça Login</Link>
         </p>
       </div>
     </div>
@@ -112,17 +115,17 @@ export default function Cadastro() {
 }
 
 const styles = {
-  container: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px", position: "relative", backgroundColor: "#0f172a" },
-  backButton: { position: "absolute", top: "30px", color: "#94a3b8", backgroundColor: "transparent", border: "none", cursor: "pointer", fontSize: "14px" },
-  card: { backgroundColor: "#1e293b", width: "100%", maxWidth: "400px", padding: "40px 30px", borderRadius: "12px", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)", textAlign: "center", border: "1px solid #334155" },
-  title: { fontSize: "24px", fontWeight: "700", marginBottom: "8px", color: "#fff" },
-  subtitle: { fontSize: "14px", color: "#94a3b8", marginBottom: "30px" },
-  errorBox: { backgroundColor: "#ef444422", color: "#f87171", padding: "10px", borderRadius: "6px", fontSize: "14px", marginBottom: "20px", border: "1px solid #ef4444" },
-  successBox: { backgroundColor: "#10b98122", color: "#34d399", padding: "10px", borderRadius: "6px", fontSize: "14px", marginBottom: "20px", border: "1px solid #10b981" },
-  inputGroup: { textAlign: "left", marginBottom: "20px" },
-  label: { display: "block", fontSize: "14px", fontWeight: "500", color: "#cbd5e1", marginBottom: "8px" },
-  input: { width: "100%", backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "6px", padding: "12px", color: "#ffffff", fontSize: "14px", outline: "none" },
-  button: { width: "100%", backgroundColor: "#10b981", color: "#ffffff", border: "none", padding: "14px", fontSize: "16px", fontWeight: "bold", borderRadius: "6px", cursor: "pointer", marginTop: "10px" },
-  footerText: { color: "#94a3b8", fontSize: "14px", marginTop: "20px" },
-  link: { color: "#6366f1", cursor: "pointer", fontWeight: "500", textDecoration: "underline" }
+  container: { display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", backgroundColor: "#090d16", fontFamily: "'Inter', sans-serif", padding: "20px" },
+  card: { width: "100%", maxWidth: "420px", backgroundColor: "#0f172a", borderRadius: "12px", padding: "40px", border: "1px solid #1e293b", textAlign: "center", boxShadow: "0 10px 25px rgba(0,0,0,0.3)" },
+  title: { fontSize: "24px", fontWeight: "800", color: "#fff", marginBottom: "8px" },
+  subtitle: { fontSize: "14px", color: "#64748b", marginBottom: "30px" },
+  form: { display: "flex", flexDirection: "column", gap: "20px" },
+  inputGroup: { display: "flex", flexDirection: "column", gap: "8px", textAlign: "left" },
+  label: { fontSize: "13px", fontWeight: "600", color: "#94a3b8" },
+  input: { padding: "12px", borderRadius: "8px", border: "1px solid #1e293b", backgroundColor: "#090d16", color: "#fff", fontSize: "14px", outline: "none" },
+  btn: { width: "100%", backgroundColor: "#38bdf8", color: "#090d16", border: "none", padding: "14px", borderRadius: "8px", fontWeight: "bold", fontSize: "15px", cursor: "pointer", transition: "0.2s", marginTop: "10px" },
+  error: { color: "#ef4444", fontSize: "14px", fontWeight: "600", marginTop: "15px" },
+  success: { color: "#34d399", fontSize: "14px", fontWeight: "600", marginTop: "15px" },
+  footerText: { fontSize: "14px", color: "#64748b", marginTop: "25px" },
+  link: { color: "#38bdf8", textDecoration: "none", fontWeight: "600" }
 };

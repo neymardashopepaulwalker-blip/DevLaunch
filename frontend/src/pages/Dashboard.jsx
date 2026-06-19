@@ -19,10 +19,10 @@ export default function Dashboard() {
   const [novaSenha, setNovaSenha] = useState("");
   const [msgConfig, setMsgConfig] = useState("");
 
-  const nomeUsuario = localStorage.getItem("usuario_nome") || "Desenvolvedor";
-  const emailUsuario = "alan.george@exemplo.com"; // Simulação, poderia vir do login
-  const idUsuario = localStorage.getItem("usuario_id");
-
+// Dentro da função de login/cadastro, onde você recebe a resposta do servidor:
+localStorage.setItem("usuario_id", dados.usuario.id);
+localStorage.setItem("usuario_nome", dados.usuario.nome);
+localStorage.setItem("usuario_email", dados.usuario.email); // 👈 Adicione essa linha se não tiver!
   useEffect(() => {
     if (!idUsuario) navigate("/login");
     else carregarHistorico();
