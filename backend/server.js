@@ -88,14 +88,15 @@ app.post('/api/projetos/salvar', async (req, res) => {
 
     if (error) return res.status(400).json({ erro: error.message });
 
-    // 2. Configura o arquivo de download com o NOME CUSTOMIZADO que veio do frontend
-    res.attachment(`${nome_projeto}.zip`);
+    // 2. Configura os Headers corretos para transferência de arquivo binário na nuvem sem travar
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename=${nome_projeto}.zip`);
 
-    // 3. Compactador ZIP
+    // 3. Compactador ZIP rodando direto na memória RAM do Render (Sem gravar arquivo físico no disco)
     const archive = archiver('zip', { zlib: { level: 9 } });
     archive.pipe(res);
 
-    // 4. Monta os arquivos internos baseado no tipo
+    // 4. Monta os arquivos internos baseado no tipo (Mantendo a sua lógica exata)
     if (tipo_projeto === "Bot de Discord") {
       archive.append(`const { Client } = require('discord.js');\nconsole.log('Bot ${nome_projeto} Online!');`, { name: 'index.js' });
       archive.append(`DISCORD_TOKEN=seu_token`, { name: '.env' });
@@ -128,11 +129,11 @@ app.post('/api/auth/mudar-senha', async (req, res) => {
   try {
     const { error } = await supabase
       .from('usuarios')
-      .update({ senha: novaSenha }) // Em um app real usaríamos Bcrypt aqui também
+      .update({ senha: novaSenha })
       .eq('id', usuario_id);
 
     if (error) return res.status(400).json({ erro: error.message });
-    res.json({ mensagem: "Senha alterada com sucesso!" });
+    res.json({ mensagem: "Senha alteredada com sucesso!" });
   } catch (err) {
     res.status(500).json({ erro: "Erro ao mudar senha." });
   }

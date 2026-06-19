@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Ícones SVG simples para a Sidebar e Configurações
 const IconSet = ({ icon }) => {
   const styles = { width: "20px", height: "20px", marginRight: "12px", fill: "currentColor" };
   const viewbox = "0 0 24 24";
@@ -21,19 +20,13 @@ const IconSet = ({ icon }) => {
 export default function Dashboard() {
   const navigate = useNavigate();
   
-  // Estados de navegação e tema
   const [activeTab, setActiveTab] = useState("home"); 
   const [temaDark, setTemaDark] = useState(true);
-  
-  // Estados do app e histórico
   const [status, setStatus] = useState("");
   const [historico, setHistorico] = useState([]);
-  
-  // Estados para o nome personalizado e limite Premium
   const [nomeCustomizado, setNomeCustomizado] = useState("");
   const LIMITE_GRATIS = 3;
 
-  // Estados de Configuração da Conta
   const [novaSenha, setNovaSenha] = useState("");
   const [msgConfig, setMsgConfig] = useState("");
 
@@ -41,10 +34,9 @@ export default function Dashboard() {
   const emailUsuario = localStorage.getItem("usuario_email") || "Usuário sem e-mail";
   const idUsuario = localStorage.getItem("usuario_id");
 
-  // URL do seu Backend real hospedado no Render
+  // Endpoint do Render
   const BACKEND_URL = "https://devlaunch-backend-uw21.onrender.com";
 
-  // 🛡️ SEGURANÇA e Busca de Histórico Corrigida
   useEffect(() => {
     if (!idUsuario) {
       navigate("/login");
@@ -71,7 +63,6 @@ export default function Dashboard() {
     navigate("/login");
   };
 
-  // 🔐 Alteração de senha apontando para a nuvem
   const handleAlterarSenha = async () => {
     if (!novaSenha) {
       setMsgConfig("❌ Por favor, digite a nova senha.");
@@ -81,26 +72,20 @@ export default function Dashboard() {
     try {
       const resposta = await fetch(`${BACKEND_URL}/api/auth/mudar-senha`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuario_id: idUsuario, novaSenha }),
       });
 
-      if (!resposta.ok) {
-        throw new Error("Falha ao alterar senha no servidor.");
-      }
+      if (!resposta.ok) throw new Error("Falha ao alterar senha.");
 
       setMsgConfig("✅ Senha alterada com sucesso!");
       setNovaSenha("");
       setTimeout(() => setMsgConfig(""), 4000);
-
     } catch (err) {
       setMsgConfig(`❌ Erro: ${err.message}`);
     }
   };
 
-  // 📦 Download de ZIP dinâmico apontando para a nuvem
   const handleGerarProjeto = async (tipo) => {
     if (historico.length >= LIMITE_GRATIS) {
       navigate("/premium");
@@ -136,7 +121,6 @@ export default function Dashboard() {
       setNomeCustomizado("");
       carregarHistorico();
       setTimeout(() => setStatus(""), 4000);
-
     } catch (err) {
       setStatus(`❌ Erro: ${err.message}`);
     }
@@ -159,59 +143,31 @@ export default function Dashboard() {
 
   return (
     <div style={{ ...styles.container, backgroundColor: colors.bg, color: colors.texto }}>
-      {/* 🟢 BARRA LATERAL */}
       <aside style={{ ...styles.sidebar, backgroundColor: colors.sidebar, borderColor: colors.borda }}>
-        <div style={styles.logoContainer}>
-          DevLaunch <IconSet icon="rocket" />
-        </div>
-        
+        <div style={styles.logoContainer}>DevLaunch <IconSet icon="rocket" /></div>
         <nav style={styles.nav}>
-          <button 
-            onClick={() => setActiveTab("home")} 
-            style={{ ...styles.navLink, ...(activeTab === "home" ? styles.navLinkActive : styles.navLinkInactive) }}
-          >
-            <IconSet icon="home" /> Painel Principal
-          </button>
-          
-          <button 
-            onClick={() => setActiveTab("settings")} 
-            style={{ ...styles.navLink, ...(activeTab === "settings" ? styles.navLinkActive : styles.navLinkInactive) }}
-          >
-            <IconSet icon="settings" /> Configurações
-          </button>
+          <button onClick={() => setActiveTab("home")} style={{ ...styles.navLink, ...(activeTab === "home" ? styles.navLinkActive : styles.navLinkInactive) }}><IconSet icon="home" /> Painel Principal</button>
+          <button onClick={() => setActiveTab("settings")} style={{ ...styles.navLink, ...(activeTab === "settings" ? styles.navLinkActive : styles.navLinkInactive) }}><IconSet icon="settings" /> Configurações</button>
         </nav>
-
         <div style={styles.sidebarFooter}>
-          <button onClick={() => setTemaDark(!temaDark)} style={styles.themeBtn}>
-            {temaDark ? "☀️ Modo Claro" : "🌙 Modo Escuro"}
-          </button>
+          <button onClick={() => setTemaDark(!temaDark)} style={styles.themeBtn}>{temaDark ? "☀️ Modo Claro" : "🌙 Modo Escuro"}</button>
           <button onClick={handleLogout} style={styles.logoutBtn}>Encerrar Sessão (Sair)</button>
         </div>
       </aside>
 
-      {/* 🔵 CONTEÚDO PRINCIPAL */}
       <main style={styles.main}>
         {status && <div style={styles.statusBox}>{status}</div>}
 
-        {/* --- PAINEL PRINCIPAL --- */}
         {activeTab === "home" && (
           <div style={styles.contentFade}>
             <header style={styles.mainHeader}>
               <h1 style={styles.title}>Olá, <span style={styles.nameHighlight}>{nomeUsuario}</span>! 👋</h1>
               <p style={{ ...styles.subtitle, color: colors.subtitle }}>O que vamos programar hoje? ({historico.length}/{LIMITE_GRATIS} Projetos)</p>
             </header>
-
             <div style={styles.inputCustomName}>
               <label style={styles.inputLabel}>Nome Customizado do Projeto (Opcional)</label>
-              <input 
-                type="text" 
-                placeholder="Ex: BotDoPeres..."
-                value={nomeCustomizado}
-                onChange={(e) => setNomeCustomizado(e.target.value)}
-                style={{ ...styles.customInput, backgroundColor: colors.bg, borderColor: colors.borda, color: colors.texto }}
-              />
+              <input type="text" placeholder="Ex: BotDoPeres..." value={nomeCustomizado} onChange={(e) => setNomeCustomizado(e.target.value)} style={{ ...styles.customInput, backgroundColor: colors.bg, borderColor: colors.borda, color: colors.texto }} />
             </div>
-
             <div style={styles.gridTemplates}>
               {Object.keys(templatesPreview).map(tipo => (
                 <div key={tipo} style={{ ...styles.templateCard, backgroundColor: colors.card, borderColor: colors.borda }}>
@@ -227,43 +183,26 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* --- CONFIGURAÇÕES CORRIGIDO COM CORES HIGH-CONTRAST --- */}
         {activeTab === "settings" && (
           <div style={styles.contentFade}>
             <header style={styles.mainHeader}>
               <h1 style={styles.title}>Configurações da Conta ⚙️</h1>
               <p style={{ ...styles.subtitle, color: colors.subtitle }}>Gerencie seus dados e altere sua senha de acesso.</p>
             </header>
-
             <div style={{ ...styles.settingsCardContainer, backgroundColor: colors.card, borderColor: colors.borda }}>
               <div style={styles.settingsGroup}>
-                <div style={styles.settingsDataRow}>
-                  <label style={styles.settingsDataLabel}>Nome Atual:</label>
-                  <span style={styles.settingsDataValue}>{nomeUsuario}</span>
-                </div>
-                <div style={styles.settingsDataRow}>
-                  <label style={styles.settingsDataLabel}>E-mail Registrado:</label>
-                  <span style={styles.settingsDataValue}>{emailUsuario}</span>
-                </div>
+                <div style={styles.settingsDataRow}><label style={styles.settingsDataLabel}>Nome Atual:</label><span style={styles.settingsDataValue}>{nomeUsuario}</span></div>
+                <div style={styles.settingsDataRow}><label style={styles.settingsDataLabel}>E-mail Registrado:</label><span style={styles.settingsDataValue}>{emailUsuario}</span></div>
               </div>
-
               <div style={{ ...styles.settingsSeparator, borderColor: colors.borda }} />
-
               <div style={styles.mudarSenhaArea}>
                 <h3 style={styles.settingsSectionTitle}>Mudar Senha</h3>
                 <div style={styles.formMudarSenhaColumn}>
-                  <input 
-                    type="password" 
-                    placeholder="Nova senha secreta" 
-                    value={novaSenha}
-                    onChange={(e) => setNovaSenha(e.target.value)}
-                    style={styles.settingsInput}
-                  />
+                  <input type="password" placeholder="Nova senha secreta" value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} style={styles.settingsInput} />
                   <button onClick={handleAlterarSenha} style={styles.savePasswordBtn}>Salvar Nova Senha</button>
                 </div>
                 {msgConfig && <div style={styles.settingsAlert}>{msgConfig}</div>}
               </div>
-
               <div style={{ ...styles.settingsSeparator, borderColor: colors.borda }} />
               <div style={styles.finalActionsSettings}>
                 <button onClick={handleLogout} style={styles.logoutSettingsBtn}>Encerrar Sessão (Sair)</button>
@@ -308,12 +247,12 @@ const styles = {
   settingsGroup: { display: "flex", flexDirection: "column", gap: "12px", marginBottom: "30px" },
   settingsDataRow: { display: "flex", gap: "10px", fontSize: "15px" },
   settingsDataLabel: { color: "#64748b", fontWeight: "500", minWidth: "140px" },
-  settingsDataValue: { color: "#38bdf8", fontWeight: "600" }, // Texto azul brilhante e visível
+  settingsDataValue: { color: "#38bdf8", fontWeight: "600" },
   settingsSeparator: { borderTop: "1px solid", margin: "20px 0" },
   mudarSenhaArea: { marginTop: "30px", marginBottom: "30px" },
   settingsSectionTitle: { fontSize: "18px", fontWeight: "800", color: "#fff", marginBottom: "20px" },
   formMudarSenhaColumn: { display: "flex", flexDirection: "column", gap: "12px", maxWidth: "350px" },
-  settingsInput: { width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #1e293b", outline: "none", fontSize: "14px", backgroundColor: "#090d16", color: "#fff" }, // Input corrigido para o tema escuro
+  settingsInput: { width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #1e293b", outline: "none", fontSize: "14px", backgroundColor: "#090d16", color: "#fff" },
   savePasswordBtn: { backgroundColor: "#38bdf8", color: "#090d16", border: "none", padding: "12px 20px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", fontSize: "14px" },
   settingsAlert: { backgroundColor: "#1e293b", padding: "10px", borderRadius: "6px", color: "#38bdf8", fontSize: "13px", marginTop: "10px", border: "1px solid #38bdf8" },
   finalActionsSettings: { display: "flex", justifyContent: "flex-end", marginTop: "20px" },

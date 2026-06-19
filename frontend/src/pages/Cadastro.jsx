@@ -24,7 +24,6 @@ export default function Cadastro() {
     }
 
     try {
-      // ⚠️ Certifique-se de usar a URL real do seu backend no Render aqui!
       const resposta = await fetch("https://devlaunch-backend-uw21.onrender.com/api/auth/cadastro", {
         method: "POST",
         headers: {
@@ -41,12 +40,11 @@ export default function Cadastro() {
 
       setSucesso("🚀 Conta criada com sucesso! Redirecionando...");
 
-      // 🎯 AQUI ESTÁ A MÁGICA: Guardando os 3 dados cruciais no navegador
+      // Salvando os dados reais recebidos do banco de dados
       localStorage.setItem("usuario_id", dados.usuario.id);
       localStorage.setItem("usuario_nome", dados.usuario.nome);
       localStorage.setItem("usuario_email", dados.usuario.email); 
 
-      // Aguarda 1.5 segundos para o usuário ver a mensagem de sucesso e redireciona
       setTimeout(() => {
         navigate("/dashboard");
       }, 1500);
