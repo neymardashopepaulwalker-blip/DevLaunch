@@ -5,104 +5,72 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
-  const [carregando, setCarregando] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setErro("");
-    setCarregando(true);
-
-    if (!email || !senha) {
-      setErro("❌ Please fill in all fields.");
-      setCarregando(false);
-      return;
-    }
+    setLoading(true);
 
     try {
-      const resposta = await fetch("https://devlaunch-backend-uw21.onrender.com/api/auth/login", {
+      const response = await fetch("https://devlaunch-backend-uw21.onrender.com/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, senha }),
       });
 
-      const dados = await resposta.json();
+      const data = await response.json();
 
-      if (!resposta.ok) {
-        throw new Error(dados.erro || "Invalid email or password.");
+      // BLINDAGEM: Se a resposta não for ok (status diferente de 2xx), joga pro bloco catch
+      if (!response.ok) {
+        throw new Error(data.erro || "Access denied. Invalid email or password.");
       }
 
-      // Gravando as chaves exatas que o backend mapeia com o Supabase
-      localStorage.setItem("usuario_id", dados.user.id);
-      localStorage.setItem("usuario_nome", dados.user.nome);
-      localStorage.setItem("usuario_email", dados.user.email);
+      if (!data.user || !data.user.id) {
+        throw new Error("Malformed payload response from authentication database.");
+      }
+
+      // Salvando os dados estritamente validados
+      localStorage.setItem("usuario_id", data.user.id);
+      localStorage.setItem("usuario_nome", data.user.nome);
+      localStorage.setItem("usuario_email", data.user.email);
 
       navigate("/dashboard");
     } catch (err) {
-      setErro(`❌ ${err.message}`);
+      setErro(err.message);
     } finally {
-      setCarregando(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Welcome back! 👋</h2>
-        <p style={styles.subtitle}>Log in to access your developer sandbox</p>
+    <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div className="box-terminal" style={{ width: "100%", maxWidth: "400px" }}>
+        <h2 style={{ marginBottom: "20px", fontSize: "20px" }}>// AUTH_GATE</h2>
+        
+        {erro && <div style={{ color: "var(--error-color)", border: "1px solid var(--error-color)", padding: "10px", marginBottom: "20px", fontSize: "13px" }}>ERROR: {erro}</div>}
 
-        <form onSubmit={handleLogin} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Email Address</label>
-            <input
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
-            />
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div>
+            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>USER_EMAIL</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Password</label>
-            <input
-              type="password"
-              placeholder="Your secret password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              style={styles.input}
-            />
+          <div>
+            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>USER_PASSWORD</label>
+            <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required />
           </div>
 
-          <button type="submit" disabled={carregando} style={styles.btn}>
-            {carregando ? "Signing in..." : "Sign In"}
+          <button type="submit" disabled={loading} className="btn-terminal">
+            {loading ? "VALIDATING..." : "EXECUTE_LOGIN"}
           </button>
         </form>
 
-        {erro && <p style={styles.error}>{erro}</p>}
-
-        <p style={styles.footerText}>
-          Don't have an account yet? <Link to="/cadastro" style={styles.link}>Sign Up</Link>
+        <p style={{ marginTop: "24px", fontSize: "13px", color: "var(--text-muted)", textAlign: "center" }}>
+          No credential block? <Link to="/cadastro" style={{ color: "var(--accent-color)" }}>Register here</Link>
         </p>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: { display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", backgroundColor: "#090d16", fontFamily: "'Inter', sans-serif", padding: "20px" },
-  card: { width: "100%", maxWidth: "420px", backgroundColor: "#0f172a", borderRadius: "12px", padding: "40px", border: "1px solid #1e293b", textAlign: "center", boxShadow: "0 10px 25px rgba(0,0,0,0.3)" },
-  title: { fontSize: "24px", fontWeight: "800", color: "#fff", marginBottom: "8px" },
-  subtitle: { fontSize: "14px", color: "#64748b", marginBottom: "30px" },
-  form: { display: "flex", flexDirection: "column", gap: "20px" },
-  inputGroup: { display: "flex", flexDirection: "column", gap: "8px", textAlign: "left" },
-  label: { fontSize: "13px", fontWeight: "600", color: "#94a3b8" },
-  input: { padding: "12px", borderRadius: "8px", border: "1px solid #1e293b", backgroundColor: "#090d16", color: "#fff", fontSize: "14px", outline: "none" },
-  btn: { width: "100%", backgroundColor: "#38bdf8", color: "#090d16", border: "none", padding: "14px", borderRadius: "8px", fontWeight: "bold", fontSize: "15px", cursor: "pointer", transition: "0.2s", marginTop: "10px" },
-  error: { color: "#ef4444", fontSize: "14px", fontWeight: "600", marginTop: "15px" },
-  footerText: { fontSize: "14px", color: "#64748b", marginTop: "25px" },
-  link: { color: "#38bdf8", textDecoration: "none", fontWeight: "600" }
-};

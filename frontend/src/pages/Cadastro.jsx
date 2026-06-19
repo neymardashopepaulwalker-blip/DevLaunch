@@ -5,125 +5,135 @@ export default function Cadastro() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
-  const [carregando, setCarregando] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleCadastro = async (e) => {
     e.preventDefault();
     setErro("");
     setSucesso("");
-    setCarregando(true);
 
-    if (!nome || !email || !senha) {
-      setErro("❌ Please fill in all fields.");
-      setCarregando(false);
+    // Validacao local estrita antes do disparo
+    if (senha !== confirmarSenha) {
+      setErro("Password mismatch. Verification field must be identical.");
       return;
     }
 
+    if (senha.length < 6) {
+      setErro("Security threshold failed. Password must be at least 6 characters.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const resposta = await fetch("https://devlaunch-backend-uw21.onrender.com/api/auth/cadastro", {
+      const response = await fetch("https://devlaunch-backend-uw21.onrender.com/api/auth/cadastro", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nome, email, senha }),
       });
 
-      const dados = await resposta.json();
+      const data = await response.json();
 
-      if (!resposta.ok) {
-        throw new Error(dados.erro || "Failed to create account.");
+      // Interceptacao de falhas estruturais do banco/servidor
+      if (!response.ok) {
+        throw new Error(data.erro || "Registration rejected by database engine.");
       }
 
-      setSucesso("🚀 Account created successfully! Redirecting...");
+      setSucesso("REGISTRATION_SUCCESSFUL. Redirecting to auth gate...");
+      
+      // Limpa os campos
+      setNome("");
+      setEmail("");
+      setSenha("");
+      setConfirmarSenha("");
 
-      // Mapeamento correto dos dados vindos do Supabase para o LocalStorage
-      localStorage.setItem("usuario_id", dados.user.id);
-      localStorage.setItem("usuario_nome", dados.user.nome);
-      localStorage.setItem("usuario_email", dados.user.email); 
-
+      // Delay controlado para o usuario ler o log de sucesso
       setTimeout(() => {
-        navigate("/dashboard");
-      }, 1500);
+        navigate("/login");
+      }, 2500);
 
     } catch (err) {
-      setErro(`❌ ${err.message}`);
+      setErro(err.message);
     } finally {
-      setCarregando(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Create your Account 🚀</h2>
-        <p style={styles.subtitle}>Start generating templates in seconds</p>
+    <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div className="box-terminal" style={{ width: "100%", maxWidth: "420px" }}>
+        <h2 style={{ marginBottom: "20px", fontSize: "20px" }}>// PROVISION_NEW_ACCOUNT</h2>
+        
+        {erro && (
+          <div style={{ color: "var(--error-color)", border: "1px solid var(--error-color)", padding: "10px", marginBottom: "20px", fontSize: "13px" }}>
+            STATUS_ERROR: {erro}
+          </div>
+        )}
 
-        <form onSubmit={handleCadastro} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Full Name</label>
-            <input
-              type="text"
-              placeholder="Your name"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              style={styles.input}
+        {sucesso && (
+          <div style={{ color: "var(--accent-color)", border: "1px solid var(--accent-color)", padding: "10px", marginBottom: "20px", fontSize: "13px", background: "#090a0f" }}>
+            {sucesso}
+          </div>
+        )}
+
+        <form onSubmit={handleCadastro} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+          <div>
+            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>REGISTRY_NAME</label>
+            <input 
+              type="text" 
+              value={nome} 
+              onChange={(e) => setNome(e.target.value)} 
+              placeholder="e.g. John Doe"
+              required 
             />
           </div>
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Email Address</label>
-            <input
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
+          <div>
+            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>SYSTEM_EMAIL</label>
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="user@domain.com"
+              required 
             />
           </div>
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Password</label>
-            <input
-              type="password"
-              placeholder="Choose a strong password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              style={styles.input}
+          <div>
+            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>ACCESS_PASSWORD</label>
+            <input 
+              type="password" 
+              value={senha} 
+              onChange={(e) => setSenha(e.target.value)} 
+              placeholder="••••••••"
+              required 
             />
           </div>
 
-          <button type="submit" disabled={carregando} style={styles.btn}>
-            {carregando ? "Creating account..." : "Register & Start"}
+          <div>
+            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>VERIFY_PASSWORD</label>
+            <input 
+              type="password" 
+              value={confirmarSenha} 
+              onChange={(e) => setConfirmarSenha(e.target.value)} 
+              placeholder="••••••••"
+              required 
+            />
+          </div>
+
+          <button type="submit" disabled={loading} className="btn-terminal" style={{ marginTop: "10px" }}>
+            {loading ? "COMMITTING_DATA..." : "EXECUTE_REGISTRATION"}
           </button>
         </form>
 
-        {erro && <p style={styles.error}>{erro}</p>}
-        {sucesso && <p style={styles.success}>{sucesso}</p>}
-
-        <p style={styles.footerText}>
-          Already have an account? <Link to="/login" style={styles.link}>Sign In</Link>
+        <p style={{ marginTop: "24px", fontSize: "13px", color: "var(--text-muted)", textAlign: "center" }}>
+          Existing token? <Link to="/login" style={{ color: "var(--accent-color)" }}>Return to Login</Link>
         </p>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: { display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", backgroundColor: "#090d16", fontFamily: "'Inter', sans-serif", padding: "20px" },
-  card: { width: "100%", maxWidth: "420px", backgroundColor: "#0f172a", borderRadius: "12px", padding: "40px", border: "1px solid #1e293b", textAlign: "center", boxShadow: "0 10px 25px rgba(0,0,0,0.3)" },
-  title: { fontSize: "24px", fontWeight: "800", color: "#fff", marginBottom: "8px" },
-  subtitle: { fontSize: "14px", color: "#64748b", marginBottom: "30px" },
-  form: { display: "flex", flexDirection: "column", gap: "20px" },
-  inputGroup: { display: "flex", flexDirection: "column", gap: "8px", textAlign: "left" },
-  label: { fontSize: "13px", fontWeight: "600", color: "#94a3b8" },
-  input: { padding: "12px", borderRadius: "8px", border: "1px solid #1e293b", backgroundColor: "#090d16", color: "#fff", fontSize: "14px", outline: "none" },
-  btn: { width: "100%", backgroundColor: "#38bdf8", color: "#090d16", border: "none", padding: "14px", borderRadius: "8px", fontWeight: "bold", fontSize: "15px", cursor: "pointer", transition: "0.2s", marginTop: "10px" },
-  error: { color: "#ef4444", fontSize: "14px", fontWeight: "600", marginTop: "15px" },
-  success: { color: "#34d399", fontSize: "14px", fontWeight: "600", marginTop: "15px" },
-  footerText: { fontSize: "14px", color: "#64748b", marginTop: "25px" },
-  link: { color: "#38bdf8", textDecoration: "none", fontWeight: "600" }
-};
