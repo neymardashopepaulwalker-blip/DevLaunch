@@ -30,7 +30,7 @@ export default function Dashboard() {
 
   const carregarHistorico = async () => {
     try {
-      const resposta = await fetch(`http://localhost:5000/api/projetos/lista/${idUsuario}`);
+      const resposta = await fetch(`https://devlaunch-backend-uw21.onrender.com/api/projetos/lista/${idUsuario}`);
       if (resposta.ok) {
         const dados = await resposta.json();
         setHistorico(dados.projetos || []);
@@ -45,7 +45,7 @@ export default function Dashboard() {
 
   const alternarSenha = async () => {
     if (!novaSenha) return;
-    const resp = await fetch("http://localhost:5000/api/auth/mudar-senha", {
+    const resp = await fetch("https://devlaunch-backend-uw21.onrender.com/api/auth/mudar-senha", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ usuario_id: idUsuario, novaSenha })
@@ -60,7 +60,7 @@ export default function Dashboard() {
     const nomeFinal = nomeCustomizado.trim() || `Meu_${tipo.replace(/\s+/g, '_')}`;
     setStatus(`⏳ Baixando ${nomeFinal}...`);
     try {
-      const resposta = await fetch("http://localhost:5000/api/projetos/salvar", {
+      const resposta = await fetch("https://devlaunch-backend-uw21.onrender.com/api/projetos/salvar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuario_id: idUsuario, tipo_projeto: tipo, nome_projeto: nomeFinal }),

@@ -16,7 +16,7 @@ export default function Login() {
 
     try {
       // Disparando para a rota de login do nosso backend Node.js
-      const resposta = await fetch("http://localhost:5000/api/auth/login", {
+      const resposta = await fetch("https://devlaunch-backend-uw21.onrender.com/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

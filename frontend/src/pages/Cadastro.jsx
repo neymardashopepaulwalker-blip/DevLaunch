@@ -19,7 +19,7 @@ export default function Cadastro() {
 
     try {
       // Disparando para a rota de cadastro que já criamos no Node.js
-      const resposta = await fetch("http://localhost:5000/api/auth/cadastro", {
+      const resposta = await fetch("https://devlaunch-backend-uw21.onrender.com/api/auth/cadastro", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
