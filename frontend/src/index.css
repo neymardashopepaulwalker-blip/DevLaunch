@@ -1,0 +1,13 @@
+/* Reseta as margens padrão do navegador e define o tema escuro */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #0f172a; /* Azul bem escuro moderno */
+  color: #f8fafc; /* Texto quase branco para não cansar a vista */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
