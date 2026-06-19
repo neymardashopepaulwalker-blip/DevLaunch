@@ -30,11 +30,11 @@ export default function Dashboard() {
   const [novaSenha, setNovaSenha] = useState("");
   const [msgConfig, setMsgConfig] = useState("");
 
-  const nomeUsuario = localStorage.getItem("usuario_nome") || "Peres";
-  const emailUsuario = localStorage.getItem("usuario_email") || "Usuário sem e-mail";
+  // Lendo as chaves correspondentes ao retorno do banco
+  const nomeUsuario = localStorage.getItem("usuario_nome") || "User";
+  const emailUsuario = localStorage.getItem("usuario_email") || "No email provided";
   const idUsuario = localStorage.getItem("usuario_id");
 
-  // Endpoint do Render
   const BACKEND_URL = "https://devlaunch-backend-uw21.onrender.com";
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function Dashboard() {
         setHistorico(dados.projetos || []);
       }
     } catch (err) {
-      console.error("Erro ao carregar histórico:", err);
+      console.error("Error loading history:", err);
     }
   };
 
@@ -65,7 +65,7 @@ export default function Dashboard() {
 
   const handleAlterarSenha = async () => {
     if (!novaSenha) {
-      setMsgConfig("❌ Por favor, digite a nova senha.");
+      setMsgConfig("❌ Please, type your new password.");
       return;
     }
     
@@ -76,13 +76,13 @@ export default function Dashboard() {
         body: JSON.stringify({ usuario_id: idUsuario, novaSenha }),
       });
 
-      if (!resposta.ok) throw new Error("Falha ao alterar senha.");
+      if (!resposta.ok) throw new Error("Failed to change password.");
 
-      setMsgConfig("✅ Senha alterada com sucesso!");
+      setMsgConfig("✅ Password changed successfully!");
       setNovaSenha("");
       setTimeout(() => setMsgConfig(""), 4000);
     } catch (err) {
-      setMsgConfig(`❌ Erro: ${err.message}`);
+      setMsgConfig(`❌ Error: ${err.message}`);
     }
   };
 
@@ -92,8 +92,8 @@ export default function Dashboard() {
       return;
     }
 
-    const nomeFinal = nomeCustomizado.trim() || `Meu_${tipo.replace(/\s+/g, '_')}`;
-    setStatus(`⏳ Gerando e baixando ${nomeFinal}...`);
+    const nomeFinal = nomeCustomizado.trim() || `My_${tipo.replace(/\s+/g, '_')}`;
+    setStatus(`⏳ Generating and downloading ${nomeFinal}...`);
 
     try {
       const resposta = await fetch(`${BACKEND_URL}/api/projetos/salvar`, {
@@ -106,7 +106,7 @@ export default function Dashboard() {
         }),
       });
 
-      if (!resposta.ok) throw new Error("Erro do servidor ao gerar arquivo.");
+      if (!resposta.ok) throw new Error("Server error generating file.");
 
       const blob = await resposta.blob();
       const urlLink = window.URL.createObjectURL(blob);
@@ -117,19 +117,19 @@ export default function Dashboard() {
       link.click();
       link.remove(); 
 
-      setStatus(`✅ Pronto! ${nomeFinal} baixado com sucesso!`);
+      setStatus(`✅ Success! ${nomeFinal} downloaded!`);
       setNomeCustomizado("");
       carregarHistorico();
       setTimeout(() => setStatus(""), 4000);
     } catch (err) {
-      setStatus(`❌ Erro: ${err.message}`);
+      setStatus(`❌ Error: ${err.message}`);
     }
   };
 
   const templatesPreview = {
-    "React Boilerplate": { icon: "⚛️", desc: "Estrutura SPA com roteamento limpo e componente App pronto." },
-    "Bot de Discord": { icon: "🤖", desc: "Template robusto em Node.js usando discord.js v14." },
-    "API Node.js": { icon: "🌐", desc: "Arquitetura REST estruturada com Express e CORS." }
+    "React Boilerplate": { icon: "⚛️", desc: "SPA structure with clean routing and ready-to-use App component." },
+    "Discord Bot": { icon: "🤖", desc: "Robust Node.js template using discord.js v14." },
+    "Node.js API": { icon: "🌐", desc: "Structured REST architecture with Express and CORS enabled." }
   };
 
   const colors = {
@@ -146,12 +146,12 @@ export default function Dashboard() {
       <aside style={{ ...styles.sidebar, backgroundColor: colors.sidebar, borderColor: colors.borda }}>
         <div style={styles.logoContainer}>DevLaunch <IconSet icon="rocket" /></div>
         <nav style={styles.nav}>
-          <button onClick={() => setActiveTab("home")} style={{ ...styles.navLink, ...(activeTab === "home" ? styles.navLinkActive : styles.navLinkInactive) }}><IconSet icon="home" /> Painel Principal</button>
-          <button onClick={() => setActiveTab("settings")} style={{ ...styles.navLink, ...(activeTab === "settings" ? styles.navLinkActive : styles.navLinkInactive) }}><IconSet icon="settings" /> Configurações</button>
+          <button onClick={() => setActiveTab("home")} style={{ ...styles.navLink, ...(activeTab === "home" ? styles.navLinkActive : styles.navLinkInactive) }}><IconSet icon="home" /> Main Dashboard</button>
+          <button onClick={() => setActiveTab("settings")} style={{ ...styles.navLink, ...(activeTab === "settings" ? styles.navLinkActive : styles.navLinkInactive) }}><IconSet icon="settings" /> Settings</button>
         </nav>
         <div style={styles.sidebarFooter}>
-          <button onClick={() => setTemaDark(!temaDark)} style={styles.themeBtn}>{temaDark ? "☀️ Modo Claro" : "🌙 Modo Escuro"}</button>
-          <button onClick={handleLogout} style={styles.logoutBtn}>Encerrar Sessão (Sair)</button>
+          <button onClick={() => setTemaDark(!temaDark)} style={styles.themeBtn}>{temaDark ? "☀️ Light Mode" : "🌙 Dark Mode"}</button>
+          <button onClick={handleLogout} style={styles.logoutBtn}>Sign Out</button>
         </div>
       </aside>
 
@@ -161,12 +161,12 @@ export default function Dashboard() {
         {activeTab === "home" && (
           <div style={styles.contentFade}>
             <header style={styles.mainHeader}>
-              <h1 style={styles.title}>Olá, <span style={styles.nameHighlight}>{nomeUsuario}</span>! 👋</h1>
-              <p style={{ ...styles.subtitle, color: colors.subtitle }}>O que vamos programar hoje? ({historico.length}/{LIMITE_GRATIS} Projetos)</p>
+              <h1 style={styles.title}>Hello, <span style={styles.nameHighlight}>{nomeUsuario}</span>! 👋</h1>
+              <p style={{ ...styles.subtitle, color: colors.subtitle }}>What are we coding today? ({historico.length}/{LIMITE_GRATIS} Projects)</p>
             </header>
             <div style={styles.inputCustomName}>
-              <label style={styles.inputLabel}>Nome Customizado do Projeto (Opcional)</label>
-              <input type="text" placeholder="Ex: BotDoPeres..." value={nomeCustomizado} onChange={(e) => setNomeCustomizado(e.target.value)} style={{ ...styles.customInput, backgroundColor: colors.bg, borderColor: colors.borda, color: colors.texto }} />
+              <label style={styles.inputLabel}>Custom Project Name (Optional)</label>
+              <input type="text" placeholder="e.g. MyAwesomeBot..." value={nomeCustomizado} onChange={(e) => setNomeCustomizado(e.target.value)} style={{ ...styles.customInput, backgroundColor: colors.bg, borderColor: colors.borda, color: colors.texto }} />
             </div>
             <div style={styles.gridTemplates}>
               {Object.keys(templatesPreview).map(tipo => (
@@ -186,26 +186,26 @@ export default function Dashboard() {
         {activeTab === "settings" && (
           <div style={styles.contentFade}>
             <header style={styles.mainHeader}>
-              <h1 style={styles.title}>Configurações da Conta ⚙️</h1>
-              <p style={{ ...styles.subtitle, color: colors.subtitle }}>Gerencie seus dados e altere sua senha de acesso.</p>
+              <h1 style={styles.title}>Account Settings ⚙️</h1>
+              <p style={{ ...styles.subtitle, color: colors.subtitle }}>Manage your profile data and access security.</p>
             </header>
             <div style={{ ...styles.settingsCardContainer, backgroundColor: colors.card, borderColor: colors.borda }}>
               <div style={styles.settingsGroup}>
-                <div style={styles.settingsDataRow}><label style={styles.settingsDataLabel}>Nome Atual:</label><span style={styles.settingsDataValue}>{nomeUsuario}</span></div>
-                <div style={styles.settingsDataRow}><label style={styles.settingsDataLabel}>E-mail Registrado:</label><span style={styles.settingsDataValue}>{emailUsuario}</span></div>
+                <div style={styles.settingsDataRow}><label style={styles.settingsDataLabel}>Full Name:</label><span style={styles.settingsDataValue}>{nomeUsuario}</span></div>
+                <div style={styles.settingsDataRow}><label style={styles.settingsDataLabel}>Registered Email:</label><span style={styles.settingsDataValue}>{emailUsuario}</span></div>
               </div>
               <div style={{ ...styles.settingsSeparator, borderColor: colors.borda }} />
               <div style={styles.mudarSenhaArea}>
-                <h3 style={styles.settingsSectionTitle}>Mudar Senha</h3>
+                <h3 style={styles.settingsSectionTitle}>Change Password</h3>
                 <div style={styles.formMudarSenhaColumn}>
-                  <input type="password" placeholder="Nova senha secreta" value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} style={styles.settingsInput} />
-                  <button onClick={handleAlterarSenha} style={styles.savePasswordBtn}>Salvar Nova Senha</button>
+                  <input type="password" placeholder="New secret password" value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} style={styles.settingsInput} />
+                  <button onClick={handleAlterarSenha} style={styles.savePasswordBtn}>Save New Password</button>
                 </div>
                 {msgConfig && <div style={styles.settingsAlert}>{msgConfig}</div>}
               </div>
               <div style={{ ...styles.settingsSeparator, borderColor: colors.borda }} />
               <div style={styles.finalActionsSettings}>
-                <button onClick={handleLogout} style={styles.logoutSettingsBtn}>Encerrar Sessão (Sair)</button>
+                <button onClick={handleLogout} style={styles.logoutSettingsBtn}>Sign Out</button>
               </div>
             </div>
           </div>

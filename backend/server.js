@@ -16,7 +16,7 @@ const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.get('/', (req, res) => {
-  res.send('🚀 Backend do DevLaunch Rodando Liso!');
+  res.send('🚀 DevLaunch Backend Running Smoothly!');
 });
 
 // ==========================================
@@ -24,14 +24,14 @@ app.get('/', (req, res) => {
 // ==========================================
 app.post('/api/auth/cadastro', async (req, res) => {
   const { nome, email, senha } = req.body;
-  if (!nome || !email || !senha) return res.status(400).json({ erro: "Campos incompletos." });
+  if (!nome || !email || !senha) return res.status(400).json({ erro: "Incomplete fields." });
 
   try {
     const { data, error } = await supabase.from('usuarios').insert([{ nome, email, senha }]).select();
     if (error) return res.status(400).json({ erro: error.message });
     res.json({ mensagem: "Sucesso!", user: data[0] });
   } catch (err) {
-    res.status(500).json({ erro: "Erro interno." });
+    res.status(500).json({ erro: "Internal server error." });
   }
 });
 
@@ -43,11 +43,11 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { data: usuario, error } = await supabase.from('usuarios').select('*').eq('email', email).single();
     if (error || !usuario || usuario.senha !== senha) {
-      return res.status(400).json({ erro: "E-mail ou senha incorretos." });
+      return res.status(400).json({ erro: "Incorrect email or password." });
     }
     res.json({ mensagem: "Sucesso!", user: { id: usuario.id, nome: usuario.nome, email: usuario.email } });
   } catch (err) {
-    res.status(500).json({ erro: "Erro interno." });
+    res.status(500).json({ erro: "Internal server error." });
   }
 });
 
@@ -66,7 +66,7 @@ app.get('/api/projetos/lista/:usuario_id', async (req, res) => {
     if (error) return res.status(400).json({ erro: error.message });
     res.json({ projetos });
   } catch (err) {
-    res.status(500).json({ erro: "Erro interno." });
+    res.status(500).json({ erro: "Internal server error." });
   }
 });
 
@@ -77,7 +77,7 @@ app.post('/api/projetos/salvar', async (req, res) => {
   const { usuario_id, tipo_projeto, nome_projeto } = req.body;
 
   if (!usuario_id || !tipo_projeto) {
-    return res.status(400).json({ erro: "Dados incompletos." });
+    return res.status(400).json({ erro: "Incomplete data." });
   }
 
   try {
@@ -88,22 +88,22 @@ app.post('/api/projetos/salvar', async (req, res) => {
 
     if (error) return res.status(400).json({ erro: error.message });
 
-    // 2. Configura os Headers corretos para transferência de arquivo binário na nuvem sem travar
+    // 2. Configura os Headers corretos para transferência estável na nuvem (Render)
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename=${nome_projeto}.zip`);
 
-    // 3. Compactador ZIP rodando direto na memória RAM do Render (Sem gravar arquivo físico no disco)
+    // 3. Compactador ZIP rodando em stream direto para o navegador pela RAM
     const archive = archiver('zip', { zlib: { level: 9 } });
     archive.pipe(res);
 
-    // 4. Monta os arquivos internos baseado no tipo (Mantendo a sua lógica exata)
-    if (tipo_projeto === "Bot de Discord") {
+    // 4. Monta os arquivos internos baseado no tipo selecionado (Prontos em inglês)
+    if (tipo_projeto === "Discord Bot") {
       archive.append(`const { Client } = require('discord.js');\nconsole.log('Bot ${nome_projeto} Online!');`, { name: 'index.js' });
-      archive.append(`DISCORD_TOKEN=seu_token`, { name: '.env' });
+      archive.append(`DISCORD_TOKEN=your_token_here`, { name: '.env' });
       archive.append(`{\n  "name": "${nome_projeto.toLowerCase()}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
     } 
-    else if (tipo_projeto === "API Node.js") {
-      archive.append(`const express = require('express');\nconst app = express();\napp.listen(5000, () => console.log('API ${nome_projeto} no ar!'));`, { name: 'server.js' });
+    else if (tipo_projeto === "Node.js API") {
+      archive.append(`const express = require('express');\nconst app = express();\napp.listen(5000, () => console.log('API ${nome_projeto} online!'));`, { name: 'server.js' });
       archive.append(`PORT=5000`, { name: '.env' });
       archive.append(`{\n  "name": "${nome_projeto.toLowerCase()}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
     } 
@@ -116,7 +116,7 @@ app.post('/api/projetos/salvar', async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    if (!res.headersSent) res.status(500).json({ erro: "Erro ao gerar zip." });
+    if (!res.headersSent) res.status(500).json({ erro: "Error generating zip." });
   }
 });
 
@@ -133,11 +133,11 @@ app.post('/api/auth/mudar-senha', async (req, res) => {
       .eq('id', usuario_id);
 
     if (error) return res.status(400).json({ erro: error.message });
-    res.json({ mensagem: "Senha alteredada com sucesso!" });
+    res.json({ mensagem: "Password changed successfully!" });
   } catch (err) {
-    res.status(500).json({ erro: "Erro ao mudar senha." });
+    res.status(500).json({ erro: "Error changing password." });
   }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Servidor na porta ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

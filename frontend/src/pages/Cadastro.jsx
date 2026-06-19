@@ -18,7 +18,7 @@ export default function Cadastro() {
     setCarregando(true);
 
     if (!nome || !email || !senha) {
-      setErro("❌ Preencha todos os campos!");
+      setErro("❌ Please fill in all fields.");
       setCarregando(false);
       return;
     }
@@ -35,15 +35,15 @@ export default function Cadastro() {
       const dados = await resposta.json();
 
       if (!resposta.ok) {
-        throw new Error(dados.erro || "Falha ao criar conta.");
+        throw new Error(dados.erro || "Failed to create account.");
       }
 
-      setSucesso("🚀 Conta criada com sucesso! Redirecionando...");
+      setSucesso("🚀 Account created successfully! Redirecting...");
 
-      // Salvando os dados reais recebidos do banco de dados
-      localStorage.setItem("usuario_id", dados.usuario.id);
-      localStorage.setItem("usuario_nome", dados.usuario.nome);
-      localStorage.setItem("usuario_email", dados.usuario.email); 
+      // Mapeamento correto dos dados vindos do Supabase para o LocalStorage
+      localStorage.setItem("usuario_id", dados.user.id);
+      localStorage.setItem("usuario_nome", dados.user.nome);
+      localStorage.setItem("usuario_email", dados.user.email); 
 
       setTimeout(() => {
         navigate("/dashboard");
@@ -59,15 +59,15 @@ export default function Cadastro() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2 style={styles.title}>Criar Conta no DevLaunch 🚀</h2>
-        <p style={styles.subtitle}>Comece a gerar seus templates em segundos</p>
+        <h2 style={styles.title}>Create your Account 🚀</h2>
+        <p style={styles.subtitle}>Start generating templates in seconds</p>
 
         <form onSubmit={handleCadastro} style={styles.form}>
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Nome Completo</label>
+            <label style={styles.label}>Full Name</label>
             <input
               type="text"
-              placeholder="Seu nome"
+              placeholder="Your name"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               style={styles.input}
@@ -75,10 +75,10 @@ export default function Cadastro() {
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>E-mail</label>
+            <label style={styles.label}>Email Address</label>
             <input
               type="email"
-              placeholder="seu@email.com"
+              placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={styles.input}
@@ -86,10 +86,10 @@ export default function Cadastro() {
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Senha</label>
+            <label style={styles.label}>Password</label>
             <input
               type="password"
-              placeholder="Sua senha secreta"
+              placeholder="Choose a strong password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               style={styles.input}
@@ -97,7 +97,7 @@ export default function Cadastro() {
           </div>
 
           <button type="submit" disabled={carregando} style={styles.btn}>
-            {carregando ? "Criando conta..." : "Registrar e Entrar"}
+            {carregando ? "Creating account..." : "Register & Start"}
           </button>
         </form>
 
@@ -105,7 +105,7 @@ export default function Cadastro() {
         {sucesso && <p style={styles.success}>{sucesso}</p>}
 
         <p style={styles.footerText}>
-          Já tem uma conta? <Link to="/login" style={styles.link}>Faça Login</Link>
+          Already have an account? <Link to="/login" style={styles.link}>Sign In</Link>
         </p>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,8 +14,13 @@ export default function Login() {
     setErro("");
     setCarregando(true);
 
+    if (!email || !senha) {
+      setErro("❌ Please fill in all fields.");
+      setCarregando(false);
+      return;
+    }
+
     try {
-      // Disparando para a rota de login do nosso backend Node.js
       const resposta = await fetch("https://devlaunch-backend-uw21.onrender.com/api/auth/login", {
         method: "POST",
         headers: {
@@ -27,18 +32,17 @@ export default function Login() {
       const dados = await resposta.json();
 
       if (!resposta.ok) {
-        throw new Error(dados.erro || "E-mail ou senha incorretos.");
+        throw new Error(dados.erro || "Invalid email or password.");
       }
 
-      // 🚨 OS SALVADORES DA PÁTRIA: Guardando os dados do usuário no navegador
+      // Gravando as chaves exatas que o backend mapeia com o Supabase
+      localStorage.setItem("usuario_id", dados.user.id);
       localStorage.setItem("usuario_nome", dados.user.nome);
-      localStorage.setItem("usuario_id", dados.user.id); // 👈 ISSO AQUI VAI CONSERTAR O GERADOR!
+      localStorage.setItem("usuario_email", dados.user.email);
 
-      // Redireciona com sucesso para o painel principal
       navigate("/dashboard");
-
     } catch (err) {
-      setErro(err.message);
+      setErro(`❌ ${err.message}`);
     } finally {
       setCarregando(false);
     }
@@ -46,50 +50,42 @@ export default function Login() {
 
   return (
     <div style={styles.container}>
-      {/* Botão discreto para voltar para a Landing Page se quiser */}
-      <button onClick={() => navigate("/")} style={styles.backButton}>← Voltar ao início</button>
-
       <div style={styles.card}>
-        <h2 style={styles.title}>Entrar no DevLaunch 🚀</h2>
-        <p style={styles.subtitle}>Faça login para gerenciar e criar seus templates</p>
+        <h2 style={styles.title}>Welcome back! 👋</h2>
+        <p style={styles.subtitle}>Log in to access your developer sandbox</p>
 
-        {/* Caixa de Erro Dinâmica */}
-        {erro && <div style={styles.errorBox}>{erro}</div>}
-
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleLogin} style={styles.form}>
           <div style={styles.inputGroup}>
-            <label style={styles.label}>E-mail</label>
-            <input 
-              type="email" 
-              placeholder="seuemail@exemplo.com" 
-              style={styles.input}
+            <label style={styles.label}>Email Address</label>
+            <input
+              type="email"
+              placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={carregando}
+              style={styles.input}
             />
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Senha</label>
-            <input 
-              type="password" 
-              placeholder="Sua senha secreta" 
-              style={styles.input}
+            <label style={styles.label}>Password</label>
+            <input
+              type="password"
+              placeholder="Your secret password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
-              required
-              disabled={carregando}
+              style={styles.input}
             />
           </div>
 
-          <button type="submit" style={styles.button} disabled={carregando}>
-            {carregando ? "Autenticando..." : "Entrar no Painel"}
+          <button type="submit" disabled={carregando} style={styles.btn}>
+            {carregando ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
+        {erro && <p style={styles.error}>{erro}</p>}
+
         <p style={styles.footerText}>
-          Não tem uma conta? <span onClick={() => navigate("/cadastro")} style={styles.link}>Crie uma agora</span>
+          Don't have an account yet? <Link to="/cadastro" style={styles.link}>Sign Up</Link>
         </p>
       </div>
     </div>
@@ -97,16 +93,16 @@ export default function Login() {
 }
 
 const styles = {
-  container: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px", position: "relative", backgroundColor: "#0f172a" },
-  backButton: { position: "absolute", top: "30px", color: "#94a3b8", backgroundColor: "transparent", border: "none", cursor: "pointer", fontSize: "14px" },
-  card: { backgroundColor: "#1e293b", width: "100%", maxWidth: "400px", padding: "40px 30px", borderRadius: "12px", boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)", textAlign: "center", border: "1px solid #334155" },
-  title: { fontSize: "24px", fontWeight: "700", marginBottom: "8px", color: "#fff" },
-  subtitle: { fontSize: "14px", color: "#94a3b8", marginBottom: "30px" },
-  errorBox: { backgroundColor: "#ef444422", color: "#f87171", padding: "10px", borderRadius: "6px", fontSize: "14px", marginBottom: "20px", border: "1px solid #ef4444" },
-  inputGroup: { textAlign: "left", marginBottom: "20px" },
-  label: { display: "block", fontSize: "14px", fontWeight: "500", color: "#cbd5e1", marginBottom: "8px" },
-  input: { width: "100%", backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "6px", padding: "12px", color: "#ffffff", fontSize: "14px", outline: "none" },
-  button: { width: "100%", backgroundColor: "#6366f1", color: "#ffffff", border: "none", padding: "14px", fontSize: "16px", fontWeight: "bold", borderRadius: "6px", cursor: "pointer", marginTop: "10px" },
-  footerText: { color: "#94a3b8", fontSize: "14px", marginTop: "20px" },
-  link: { color: "#10b981", cursor: "pointer", fontWeight: "500", textDecoration: "underline" }
+  container: { display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", backgroundColor: "#090d16", fontFamily: "'Inter', sans-serif", padding: "20px" },
+  card: { width: "100%", maxWidth: "420px", backgroundColor: "#0f172a", borderRadius: "12px", padding: "40px", border: "1px solid #1e293b", textAlign: "center", boxShadow: "0 10px 25px rgba(0,0,0,0.3)" },
+  title: { fontSize: "24px", fontWeight: "800", color: "#fff", marginBottom: "8px" },
+  subtitle: { fontSize: "14px", color: "#64748b", marginBottom: "30px" },
+  form: { display: "flex", flexDirection: "column", gap: "20px" },
+  inputGroup: { display: "flex", flexDirection: "column", gap: "8px", textAlign: "left" },
+  label: { fontSize: "13px", fontWeight: "600", color: "#94a3b8" },
+  input: { padding: "12px", borderRadius: "8px", border: "1px solid #1e293b", backgroundColor: "#090d16", color: "#fff", fontSize: "14px", outline: "none" },
+  btn: { width: "100%", backgroundColor: "#38bdf8", color: "#090d16", border: "none", padding: "14px", borderRadius: "8px", fontWeight: "bold", fontSize: "15px", cursor: "pointer", transition: "0.2s", marginTop: "10px" },
+  error: { color: "#ef4444", fontSize: "14px", fontWeight: "600", marginTop: "15px" },
+  footerText: { fontSize: "14px", color: "#64748b", marginTop: "25px" },
+  link: { color: "#38bdf8", textDecoration: "none", fontWeight: "600" }
 };
