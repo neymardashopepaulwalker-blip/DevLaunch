@@ -10,7 +10,7 @@ export default function Dashboard() {
   
   const navigate = useNavigate();
 
-  // Chaves originais que você usava
+  // Legacy keys you trust
   const idUsuario = localStorage.getItem('usuario_id');
   const nomeUsuario = localStorage.getItem('usuario_nome') || "User";
   const emailUsuario = localStorage.getItem('usuario_email') || "";
@@ -72,7 +72,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          usuario_id: idUsuario, // Garante que o ID vai pro Supabase não dar erro!
+          usuario_id: idUsuario, 
           tipo_projeto: tipo,
           nome_projeto: nomeFinal
         })
@@ -91,86 +91,89 @@ export default function Dashboard() {
 
       setStatus(`✅ Downloaded successfully!`);
       setNomeCustomizado("");
-      carregarHistorico(); // Atualiza a sua lista na hora
+      carregarHistorico(); 
     } catch (err) {
       setStatus("❌ Server Error generating ZIP.");
     }
   };
 
   return (
-    <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'sans-serif', color: '#fff', backgroundColor: '#090d16', minHeight: '100vh' }}>
+    <div style={{ padding: '50px 20px', maxWidth: '1200px', margin: '0 auto', minHeight: '100vh' }}>
       
-      {/* HEADER ANTIGO */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', borderBottom: '1px solid #1e293b', paddingBottom: '20px' }}>
+      {/* 🟢 WORKBENCH HEADER: Simplified, Uppercase Utility */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '50px', borderBottom: '2px solid rgba(56, 189, 248, 0.1)', paddingBottom: '30px' }}>
         <div>
-          <h2>DevLaunch Workspace 🚀</h2>
-          <p style={{ color: '#94a3b8' }}>Welcome back, <b>{nomeUsuario}</b> ({emailUsuario})</p>
+          <h1 style={{ margin: '0 0 10px 0', fontSize: '2.4rem' }}>DevLaunch Workbench</h1>
+          <p style={{ color: '#fff', fontSize: '15px', margin: 0 }}>
+            Session Active: <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>{nomeUsuario}</span> ({emailUsuario})
+          </p>
         </div>
-        <button onClick={handleLogout} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Sign Out</button>
+        <button onClick={handleLogout} className="btn-error" style={{ width: 'auto', padding: '10px 20px', fontWeight: 'bold', fontSize: '14px' }}>Sign Out</button>
       </div>
 
-      {status && <div style={{ backgroundColor: '#1e293b', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #38bdf8', color: '#38bdf8', fontWeight: 'bold' }}>{status}</div>}
+      {status && <div style={{ backgroundColor: '#0c0e18', padding: '15px', borderRadius: '0', marginBottom: '25px', border: '2px solid #38bdf8', color: '#38bdf8', fontWeight: 'bold' }}>{status}</div>}
 
-      {/* RENDERIZADOR DE EVENTOS / GERADOR */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+      {/* WORKBENCH CORE: Grid Panels */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '30px' }}>
         
-        {/* LADO ESQUERDO: GERAR PROJETOS */}
-        <div>
-          <h3 style={{ marginBottom: '20px' }}>Generate New Project</h3>
+        {/*LEFT PANEL: Project Generator */}
+        <div className="workbench-panel">
+          <h2 style={{ marginBottom: '25px', color: '#00ff66', letterSpacing: '2px' }}>Generate Project Module</h2>
           
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8' }}>Project Name (Optional)</label>
+          <div style={{ marginBottom: '25px' }}>
+            <label style={{ display: 'block', marginBottom: '10px', color: '#94a3b8', fontSize: '13px' }}>Project Prefix (Optional)</label>
             <input 
               type="text" 
-              placeholder="e.g. MyAmazingApp" 
+              placeholder="e.g. neymardashopepaulwalker-blip" 
               value={nomeCustomizado} 
               onChange={(e) => setNomeCustomizado(e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #1e293b', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }}
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            <button onClick={() => handleGerarProjeto("React Boilerplate")} style={{ padding: '15px', backgroundColor: '#38bdf8', color: '#090d16', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>⚛️ React Boilerplate</button>
-            <button onClick={() => handleGerarProjeto("Node.js API")} style={{ padding: '15px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>🌐 Node.js REST API</button>
-            <button onClick={() => handleGerarProjeto("Discord Bot")} style={{ padding: '15px', backgroundColor: '#6366f1', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>🤖 Discord Bot Base</button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <button onClick={() => handleGerarProjeto("React Boilerplate")}>REACT.js Module</button>
+            <button onClick={() => handleGerarProjeto("Node.js API")}>Node.js REST API</button>
+            <button onClick={() => handleGerarProjeto("Discord Bot")}>Discord Bot Base</button>
           </div>
         </div>
 
-        {/* LADO DIREITO: HISTÓRICO ANTIGO */}
-        <div>
-          <h3 style={{ marginBottom: '20px' }}>Project History ({historico.length})</h3>
-          <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', padding: '20px', maxHeight: '300px', overflowY: 'auto' }}>
-            {historico.length === 0 ? (
-              <p style={{ color: '#64748b', margin: 0 }}>No projects generated yet.</p>
-            ) : (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {historico.map((p, i) => (
-                  <li key={i} style={{ padding: '12px', backgroundColor: '#1e293b', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <strong style={{ color: '#38bdf8' }}>{p.nome_projeto}</strong>
-                      <span style={{ fontSize: '12px', color: '#94a3b8', display: 'block' }}>{p.tipo_projeto}</span>
-                    </div>
-                    <span style={{ fontSize: '12px', color: '#64748b' }}>{p.criado_em ? new Date(p.criado_em).toLocaleDateString() : 'Ready'}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+        {/* 📦 RIGHT PANEL: Log History & Settings */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+          
+          <div className="workbench-panel">
+            <h3 style={{ marginBottom: '20px', color: '#fff', letterSpacing: '1px' }}>Project Logs ({historico.length})</h3>
+            <div style={{ backgroundColor: '#0c0e18', border: '1px solid #1e293b', padding: '20px', maxHeight: '300px', overflowY: 'auto' }}>
+              {historico.length === 0 ? (
+                <p style={{ color: '#64748b', margin: 0, fontSize: '14px' }}>Log is currently empty.</p>
+              ) : (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  {historico.map((p, i) => (
+                    <li key={i} style={{ padding: '15px', backgroundColor: '#12122b', borderLeft: '3px solid #00ff66', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ maxWidth: '65%' }}>
+                        <strong style={{ color: '#00ff66', fontSize: '15px', display: 'block', wordWrap: 'break-word' }}>{p.nome_projeto}</strong>
+                        <span style={{ fontSize: '12px', color: '#94a3b8', display: 'block' }}>TYPE: {p.tipo_projeto}</span>
+                      </div>
+                      <span style={{ fontSize: '12px', color: '#64748b', textAlign: 'right' }}>{p.criado_em ? new Date(p.criado_em).toLocaleDateString() : 'Active'}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
-          {/* AJUSTE DE SENHA DO SEU LAYOUT ANTIGO */}
-          <div style={{ marginTop: '40px', borderTop: '1px solid #1e293b', paddingTop: '20px' }}>
-            <h3>Account Settings</h3>
-            <form onSubmit={handleMudarSenha} style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+          {/* Account Integrity Section */}
+          <div className="workbench-panel">
+            <h3 style={{ marginBottom: '20px', color: '#fff', letterSpacing: '1px' }}>Account Settings</h3>
+            <form onSubmit={handleMudarSenha} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <input 
                 type="password" 
-                placeholder="New Password" 
+                placeholder="New Integrity Password" 
                 value={novaSenha} 
                 onChange={(e) => setNovaSenha(e.target.value)}
-                style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #1e293b', backgroundColor: '#0f172a', color: '#fff' }}
               />
-              <button type="submit" style={{ backgroundColor: '#334155', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer' }}>Update</button>
+              <button type="submit" style={{ padding: '10px 20px', border: '2px solid #334155', color: '#94a3b8' }}>Update Credentials</button>
             </form>
-            {msgConfig && <p style={{ fontSize: '14px', marginTop: '10px' }}>{msgConfig}</p>}
+            {msgConfig && <p style={{ fontSize: '14px', marginTop: '15px', color: msgConfig.includes('❌') ? '#ff0033' : '#00ff66' }}>{msgConfig}</p>}
           </div>
 
         </div>
