@@ -25,12 +25,10 @@ export default function Dashboard() {
   const [status, setStatus] = useState("");
   const [historico, setHistorico] = useState([]);
   const [nomeCustomizado, setNomeCustomizado] = useState("");
-  const LIMITE_GRATIS = 3;
 
   const [novaSenha, setNovaSenha] = useState("");
   const [msgConfig, setMsgConfig] = useState("");
 
-  // Lendo as chaves correspondentes ao retorno do banco
   const nomeUsuario = localStorage.getItem("usuario_nome") || "User";
   const emailUsuario = localStorage.getItem("usuario_email") || "No email provided";
   const idUsuario = localStorage.getItem("usuario_id");
@@ -87,11 +85,6 @@ export default function Dashboard() {
   };
 
   const handleGerarProjeto = async (tipo) => {
-    if (historico.length >= LIMITE_GRATIS) {
-      navigate("/premium");
-      return;
-    }
-
     const nomeFinal = nomeCustomizado.trim() || `My_${tipo.replace(/\s+/g, '_')}`;
     setStatus(`⏳ Generating and downloading ${nomeFinal}...`);
 
@@ -162,7 +155,7 @@ export default function Dashboard() {
           <div style={styles.contentFade}>
             <header style={styles.mainHeader}>
               <h1 style={styles.title}>Hello, <span style={styles.nameHighlight}>{nomeUsuario}</span>! 👋</h1>
-              <p style={{ ...styles.subtitle, color: colors.subtitle }}>What are we coding today? ({historico.length}/{LIMITE_GRATIS} Projects)</p>
+              <p style={{ ...styles.subtitle, color: colors.subtitle }}>What are we coding today? Total generated: {historico.length}</p>
             </header>
             <div style={styles.inputCustomName}>
               <label style={styles.inputLabel}>Custom Project Name (Optional)</label>
