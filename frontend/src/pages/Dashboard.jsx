@@ -5,7 +5,7 @@ export default function Dashboard() {
   const [historico, setHistorico] = useState([]);
   const [nomeCustomizado, setNomeCustomizado] = useState("");
   const [status, setStatus] = useState("");
-  const [statusTipo, setStatusTipo] = useState("info");
+  const [statusTipo, setStatusTipo] = useState("info"); // info, success, error
   const [stackSelecionada, setStackSelecionada] = useState("React Boilerplate");
   
   const navigate = useNavigate();
@@ -15,21 +15,29 @@ export default function Dashboard() {
 
   const BACKEND_URL = "https://devlaunch-backend-uw21.onrender.com";
 
+  // Mapeamento estável de Strings para o Banco de dados
+  const mapeamentoBackend = {
+    "React Boilerplate": "REACT.js Module",
+    "Node.js API": "Node.js REST API",
+    "Discord Bot": "Discord Bot Base"
+  };
+
+  // Mock de arquivos estáticos para o Code Preview
   const previewsDasStacks = {
     "React Boilerplate": {
-      arquivos: ["src/main.jsx", "src/App.jsx", "src/index.css", "package.json"],
+      arquivos: ["src/main.jsx", "src/App.jsx", "src/index.css", "package.json", "vite.config.js"],
       arquivoAtivo: "src/App.jsx",
-      codigo: `import React from 'react';\n\nexport default function App() {\n  return (\n    <div className="container">\n      <h1>Environment Online</h1>\n      <p>React scaffold ready.</p>\n    </div>\n  );\n}`
+      codigo: `import React from 'react';\nimport './index.css';\n\nexport default function App() {\n  return (\n    <div className="app-container">\n      <h1>Application Environment Online</h1>\n      <p>Boilerplate engine mounted successfully.</p>\n    </div>\n  );\n}`
     },
     "Node.js API": {
-      arquivos: ["server.js", "routes/api.js", "package.json", ".env.example"],
+      arquivos: ["server.js", "routes/api.js", "middleware/auth.js", "package.json", ".env.example"],
       arquivoAtivo: "server.js",
-      codigo: `const express = require('express');\nconst cors = require('cors');\nconst app = express();\n\napp.use(cors());\napp.use(express.json());\n\nconst PORT = process.env.PORT || 5000;\napp.listen(PORT, () => console.log('API active'));`
+      codigo: `const express = require('express');\nconst cors = require('cors');\nconst app = express();\n\napp.use(cors());\napp.use(express.json());\n\napp.get('/api/health', (req, res) => {\n  res.status(200).json({ status: 'healthy', timestamp: Date.now() });\n});\n\nconst PORT = process.env.PORT || 5000;\napp.listen(PORT, () => console.log(\`Server online on port \${PORT}\`));`
     },
     "Discord Bot": {
-      arquivos: ["index.js", "commands/ping.js", "package.json"],
+      arquivos: ["index.js", "commands/ping.js", "events/ready.js", "package.json", "config.json"],
       arquivoAtivo: "index.js",
-      codigo: `const { Client, GatewayIntentBits } = require('discord.js');\nconst client = new Client({ intents: [GatewayIntentBits.Guilds] });\n\nclient.once('ready', () => {\n  console.log('Bot is online');\n});\n\nclient.login(process.env.DISCORD_TOKEN);`
+      codigo: `const { Client, GatewayIntentBits } = require('discord.js');\nconst client = new Client({ intents: [GatewayIntentBits.Guilds] });\n\nclient.once('ready', () => {\n  console.log(\`Logged in securely as \${client.user.tag}\`);\n});\n\nclient.login(process.env.DISCORD_TOKEN);`
     }
   };
 
@@ -49,7 +57,7 @@ export default function Dashboard() {
         setHistorico(dados.projetos || []);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Failed history synchronization:", err);
     }
   };
 
@@ -60,7 +68,7 @@ export default function Dashboard() {
 
   const handleGerarProjeto = async () => {
     const nomeFinal = nomeCustomizado.trim() || `Project_${stackSelecionada.replace(/\s+/g, '_')}`;
-    setStatus(`Compiling bundle for ${nomeFinal}...`);
+    setStatus(`Compiling production bundle matrix for ${nomeFinal}...`);
     setStatusTipo("info");
 
     try {
@@ -69,13 +77,15 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           usuario_id: idUsuario, 
-          tipo_projeto: stackSelecionada,
+          tipo_projeto: mapeamentoBackend[stackSelecionada],
           nome_projeto: nomeFinal
         })
       });
 
       if (!res.ok) {
-        throw new Error("Generation pipeline failed. Check backend tables.");
+        const textoErro = await res.text();
+        console.error("Detailed server payload response error:", textoErro);
+        throw new Error(`Server returned status ${res.status}. Database schema constraint block.`);
       }
 
       const blob = await res.blob();
@@ -87,36 +97,39 @@ export default function Dashboard() {
       a.click();
       a.remove();
 
-      setStatus(`Success. Generated archive saved payload.`);
+      setStatus(`Success. ${nomeFinal}.zip successfully saved to local device storage.`);
       setStatusTipo("success");
       setNomeCustomizado("");
       carregarHistorico(); 
     } catch (err) {
-      setStatus(err.message);
+      setStatus(`Generation Pipeline Error: ${err.message}`);
       setStatusTipo("error");
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-dark)" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 40px", borderBottom: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-card)" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-dark-obsidian)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
+      
+      {/* HEADER DE ALTA ENGENHARIA */}
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 40px", borderBottom: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-card-charcoal)" }}>
         <div>
-          <span style={{ fontWeight: "700", color: "#fff", fontSize: "15px" }}>DevLaunch Workspace</span>
-          <div style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
-            Active Session: <span style={{ color: "#fff" }}>{nomeUsuario}</span> ({emailUsuario})
+          <span style={{ fontWeight: "700", letterSpacing: "1px", color: "#fff", fontSize: "16px" }}>DEVLAUNCH // WORKSPACE</span>
+          <div style={{ color: "var(--text-secondary)", fontSize: "13px", marginTop: "4px" }}>
+            Node Identifier: <span style={{ color: "var(--text-primary)" }}>{nomeUsuario}</span> — {emailUsuario}
           </div>
         </div>
-        <button onClick={handleLogout} style={{ background: "transparent", border: "1px solid var(--border-subtle)", color: "#fff", padding: "8px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "13px" }}>
-          Sign Out
+        <button onClick={handleLogout} style={{ background: "transparent", border: "1px solid var(--border-subtle)", color: "var(--text-primary)", padding: "8px 16px", cursor: "pointer", fontSize: "13px" }}>
+          Disconnect
         </button>
       </header>
 
+      {/* NOTIFICAÇÃO DO SISTEMA CORRIGIDA */}
       {status && (
         <div style={{ 
-          padding: "12px 40px", 
-          backgroundColor: statusTipo === "error" ? "rgba(239, 68, 68, 0.1)" : statusTipo === "success" ? "rgba(16, 185, 129, 0.1)" : "rgba(124, 58, 237, 0.1)",
-          borderBottom: "1px solid " + (statusTipo === "error" ? "#ef4444" : statusTipo === "success" ? "#10b981" : "#7c3aed"),
-          color: statusTipo === "error" ? "#ef4444" : statusTipo === "success" ? "#10b981" : "#a78bfa",
+          padding: "16px 40px", 
+          backgroundColor: statusTipo === "error" ? "rgba(239, 68, 68, 0.1)" : statusTipo === "success" ? "rgba(16, 185, 129, 0.1)" : "rgba(139, 92, 246, 0.1)",
+          borderBottom: "1px solid " + (statusTipo === "error" ? "var(--color-error)" : statusTipo === "success" ? "var(--color-success)" : "var(--accent-premium)"),
+          color: statusTipo === "error" ? "var(--color-error)" : statusTipo === "success" ? "var(--color-success)" : "var(--accent-premium)",
           fontSize: "13px",
           fontFamily: "monospace"
         }}>
@@ -124,23 +137,28 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "400px 1fr", flex: 1 }}>
-        <div style={{ padding: "40px", borderRight: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", gap: "28px" }}>
+      {/* PAINEL CENTRAL DUPLO */}
+      <div style={{ display: "grid", gridTemplateColumns: "450px 1fr", flex: 1 }}>
+        
+        {/* COLUNA ESQUERDA: GERENCIAMENTO */}
+        <div style={{ padding: "40px", borderRight: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", gap: "32px" }}>
+          
           <div>
-            <h3 style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 12px 0" }}>Select Stack</h3>
+            <h3 style={{ fontSize: "14px", color: "#fff", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 16px 0" }}>Select Core Stack</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {["React Boilerplate", "Node.js API", "Discord Bot"].map((stack) => (
                 <div 
                   key={stack}
                   onClick={() => setStackSelecionada(stack)}
                   style={{
-                    padding: "14px",
-                    backgroundColor: "var(--bg-card)",
-                    border: "1px solid " + (stackSelecionada === stack ? "var(--accent-purple)" : "var(--border-subtle)"),
-                    borderRadius: "6px",
+                    padding: "16px",
+                    backgroundColor: "var(--bg-card-charcoal)",
+                    border: "1px solid " + (stackSelecionada === stack ? "var(--accent-premium)" : "var(--border-subtle)"),
                     cursor: "pointer",
                     fontSize: "14px",
-                    color: stackSelecionada === stack ? "#fff" : "var(--text-muted)"
+                    fontWeight: stackSelecionada === stack ? "600" : "400",
+                    color: stackSelecionada === stack ? "#fff" : "var(--text-secondary)",
+                    transition: "all 0.15s ease"
                   }}
                 >
                   {stack}
@@ -150,63 +168,105 @@ export default function Dashboard() {
           </div>
 
           <div>
-            <h3 style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 12px 0" }}>Naming Rules</h3>
-            <input 
-              type="text"
-              placeholder="Project name prefix"
-              value={nomeCustomizado}
-              onChange={(e) => setNomeCustomizado(e.target.value)}
-              className="input-premium"
-            />
+            <h3 style={{ fontSize: "14px", color: "#fff", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 16px 0" }}>Configuration</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <label style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Output Name Prefix</label>
+              <input 
+                type="text"
+                placeholder="e.g. production-api-v1"
+                value={nomeCustomizado}
+                onChange={(e) => setNomeCustomizado(e.target.value)}
+                style={{
+                  width: "100%", padding: "12px", backgroundColor: "var(--bg-input-dark)", 
+                  border: "1px solid var(--border-subtle)", color: "#fff", outline: "none", fontSize: "14px"
+                }}
+              />
+            </div>
           </div>
 
-          <button onClick={handleGerarProjeto} className="btn-premium">
-            Generate Template Package
+          <button 
+            onClick={handleGerarProjeto}
+            style={{
+              width: "100%", padding: "16px", backgroundColor: "var(--accent-premium)", border: "none",
+              color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px"
+            }}
+          >
+            Compile and Stream ZIP
           </button>
 
-          <div style={{ marginTop: "auto", borderTop: "1px solid var(--border-subtle)", paddingTop: "20px" }}>
-            <h4 style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", margin: "0 0 12px 0" }}>Historic Runs ({historico.length})</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "140px", overflowY: "auto" }}>
+          {/* SESSÃO DE LOGS HISTÓRICOS */}
+          <div style={{ marginTop: "auto", paddingTop: "20px", borderTop: "1px solid var(--border-subtle)" }}>
+            <h4 style={{ fontSize: "12px", color: "var(--text-secondary)", textTransform: "uppercase", margin: "0 0 12px 0" }}>Historic Deployments ({historico.length})</h4>
+            <div style={{ maxHeight: "150px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
               {historico.length === 0 ? (
-                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>No structural history row logged.</span>
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Registry system idle.</span>
               ) : (
-                historico.map((h, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
-                    <span style={{ color: "#fff", fontFamily: "monospace" }}>{h.nome_projeto}</span>
-                    <span style={{ color: "var(--text-muted)" }}>{h.tipo_projeto}</span>
+                historico.map((proj, idx) => (
+                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "var(--text-secondary)", padding: "4px 0" }}>
+                    <span style={{ color: "var(--text-primary)", fontFamily: "monospace" }}>&gt; {proj.nome_projeto}</span>
+                    <span style={{ color: "var(--text-muted)" }}>{proj.tipo_projeto}</span>
                   </div>
                 ))
               )}
             </div>
           </div>
+
         </div>
 
-        {/* COMPONENTE DE PREVIEW REAL DO CÓDIGO */}
-        <div style={{ backgroundColor: "#050507", display: "flex", flexDirection: "column" }}>
-          <div style={{ padding: "12px 24px", borderBottom: "1px solid var(--border-subtle)", fontSize: "12px", color: "var(--text-muted)", fontFamily: "monospace" }}>
-            LIVE SCANNER // targets: <span style={{ color: "#fff" }}>{stackSelecionada}</span>
+        {/* COLUNA DIREITA: LIVE ARCHIVE PREVIEW */}
+        <div style={{ backgroundColor: "#040306", display: "flex", flexDirection: "column" }}>
+          
+          {/* Subheader do Preview */}
+          <div style={{ padding: "14px 30px", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "12px", fontFamily: "monospace", color: "var(--text-secondary)" }}>
+              ARCHIVE_VIEWER // active_target: <span style={{ color: "var(--accent-premium)" }}>{stackSelecionada}</span>
+            </span>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "monospace" }}>STATUS: READ_ONLY</span>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", flex: 1 }}>
-            <div style={{ borderRight: "1px solid var(--border-subtle)", padding: "20px", display: "flex", flexDirection: "column", gap: "8px" }}>
-              <span style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "600" }}>Structure</span>
-              {previewsDasStacks[stackSelecionada].arquivos.map((f) => (
-                <div key={f} style={{ fontSize: "13px", fontFamily: "monospace", color: f === previewsDasStacks[stackSelecionada].arquivoAtivo ? "var(--accent-purple)" : "var(--text-muted)" }}>
-                  {f === previewsDasStacks[stackSelecionada].arquivoAtivo ? "→ " : "  "} {f}
+          <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", flex: 1 }}>
+            
+            {/* Mini Árvore de Arquivos */}
+            <div style={{ borderRight: "1px solid var(--border-subtle)", padding: "24px 20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Manifest Tree</span>
+              {previewsDasStacks[stackSelecionada].arquivos.map((file) => (
+                <div 
+                  key={file} 
+                  style={{ 
+                    fontSize: "13px", 
+                    fontFamily: "monospace", 
+                    color: file === previewsDasStacks[stackSelecionada].arquivoAtivo ? "var(--accent-premium)" : "var(--text-secondary)",
+                    padding: "4px 0"
+                  }}
+                >
+                  {file === previewsDasStacks[stackSelecionada].arquivoAtivo ? "• " : "  "} {file}
                 </div>
               ))}
             </div>
 
-            <div style={{ padding: "24px", overflow: "auto" }}>
-              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px", fontFamily: "monospace" }}>
-                {previewsDasStacks[stackSelecionada].arquivoAtivo}
+            {/* Visualizador de Código */}
+            <div style={{ padding: "24px 30px", overflow: "auto" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
+                <span style={{ fontSize: "12px", fontFamily: "monospace", color: "var(--text-secondary)" }}>
+                  {previewsDasStacks[stackSelecionada].arquivoAtivo}
+                </span>
               </div>
-              <pre style={{ margin: 0, fontFamily: "monospace", fontSize: "13px", lineHeight: "1.6", color: "#c084fc", whiteSpace: "pre-wrap" }}>
+              <pre style={{ 
+                margin: 0, 
+                fontFamily: "Consolas, 'Fira Code', Monaco, monospace", 
+                fontSize: "13px", 
+                lineHeight: "1.6", 
+                color: "#a78bfa", 
+                whiteSpace: "pre-wrap" 
+              }}>
                 {previewsDasStacks[stackSelecionada].codigo}
               </pre>
             </div>
+
           </div>
+
         </div>
+
       </div>
     </div>
   );
