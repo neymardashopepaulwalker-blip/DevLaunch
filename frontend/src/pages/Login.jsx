@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
@@ -22,16 +22,10 @@ export default function Login() {
 
       const data = await response.json();
 
-      // BLINDAGEM: Se a resposta não for ok (status diferente de 2xx), joga pro bloco catch
       if (!response.ok) {
-        throw new Error(data.erro || "Access denied. Invalid email or password.");
+        throw new Error(data.erro || "Invalid email or password parameter.");
       }
 
-      if (!data.user || !data.user.id) {
-        throw new Error("Malformed payload response from authentication database.");
-      }
-
-      // Salvando os dados estritamente validados
       localStorage.setItem("usuario_id", data.user.id);
       localStorage.setItem("usuario_nome", data.user.nome);
       localStorage.setItem("usuario_email", data.user.email);
@@ -45,30 +39,30 @@ export default function Login() {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-      <div className="box-terminal" style={{ width: "100%", maxWidth: "400px" }}>
-        <h2 style={{ marginBottom: "20px", fontSize: "20px" }}>// AUTH_GATE</h2>
-        
-        {erro && <div style={{ color: "var(--error-color)", border: "1px solid var(--error-color)", padding: "10px", marginBottom: "20px", fontSize: "13px" }}>ERROR: {erro}</div>}
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div style={{ backgroundColor: "var(--bg-card)", padding: "40px", borderRadius: "12px", border: "1px solid var(--border-subtle)", width: "100%", maxWidth: "400px" }}>
+        <h2 style={{ color: "#fff", fontSize: "20px", fontWeight: "700", margin: "0 0 8px 0" }}>Welcome back</h2>
+        <p style={{ color: "var(--text-muted)", fontSize: "14px", margin: "0 0 24px 0" }}>Sign in to access your saved configuration pipelines.</p>
 
-        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        {erro && <div style={{ color: "var(--error)", fontSize: "13px", marginBottom: "16px" }}>{erro}</div>}
+
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div>
-            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>USER_EMAIL</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-muted)", fontSize: "12px" }}>Email address</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-premium" required />
+          </div>
+          <div>
+            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-muted)", fontSize: "12px" }}>Password</label>
+            <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} className="input-premium" required />
           </div>
 
-          <div>
-            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>USER_PASSWORD</label>
-            <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required />
-          </div>
-
-          <button type="submit" disabled={loading} className="btn-terminal">
-            {loading ? "VALIDATING..." : "EXECUTE_LOGIN"}
+          <button type="submit" disabled={loading} className="btn-premium" style={{ marginTop: "8px" }}>
+            {loading ? "Verifying..." : "Sign In"}
           </button>
         </form>
 
-        <p style={{ marginTop: "24px", fontSize: "13px", color: "var(--text-muted)", textAlign: "center" }}>
-          No credential block? <Link to="/cadastro" style={{ color: "var(--accent-color)" }}>Register here</Link>
+        <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "24px", textAlign: "center", margin: "24px 0 0 0" }}>
+          Don't have an account? <Link to="/cadastro" style={{ color: "var(--accent-purple)", textDecoration: "none" }}>Register</Link>
         </p>
       </div>
     </div>

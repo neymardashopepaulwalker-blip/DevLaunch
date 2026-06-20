@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function Cadastro() {
@@ -16,14 +16,8 @@ export default function Cadastro() {
     setErro("");
     setSucesso("");
 
-    // Validacao local estrita antes do disparo
     if (senha !== confirmarSenha) {
-      setErro("Password mismatch. Verification field must be identical.");
-      return;
-    }
-
-    if (senha.length < 6) {
-      setErro("Security threshold failed. Password must be at least 6 characters.");
+      setErro("Passwords do not match.");
       return;
     }
 
@@ -38,24 +32,12 @@ export default function Cadastro() {
 
       const data = await response.json();
 
-      // Interceptacao de falhas estruturais do banco/servidor
       if (!response.ok) {
-        throw new Error(data.erro || "Registration rejected by database engine.");
+        throw new Error(data.erro || "Could not complete registration.");
       }
 
-      setSucesso("REGISTRATION_SUCCESSFUL. Redirecting to auth gate...");
-      
-      // Limpa os campos
-      setNome("");
-      setEmail("");
-      setSenha("");
-      setConfirmarSenha("");
-
-      // Delay controlado para o usuario ler o log de sucesso
-      setTimeout(() => {
-        navigate("/login");
-      }, 2500);
-
+      setSucesso("Account created successfully. Redirecting...");
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setErro(err.message);
     } finally {
@@ -64,74 +46,39 @@ export default function Cadastro() {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-      <div className="box-terminal" style={{ width: "100%", maxWidth: "420px" }}>
-        <h2 style={{ marginBottom: "20px", fontSize: "20px" }}>// PROVISION_NEW_ACCOUNT</h2>
-        
-        {erro && (
-          <div style={{ color: "var(--error-color)", border: "1px solid var(--error-color)", padding: "10px", marginBottom: "20px", fontSize: "13px" }}>
-            STATUS_ERROR: {erro}
-          </div>
-        )}
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div style={{ backgroundColor: "var(--bg-card)", padding: "40px", borderRadius: "12px", border: "1px solid var(--border-subtle)", width: "100%", maxWidth: "400px" }}>
+        <h2 style={{ color: "#fff", fontSize: "20px", fontWeight: "700", margin: "0 0 8px 0" }}>Create an account</h2>
+        <p style={{ color: "var(--text-muted)", fontSize: "14px", margin: "0 0 24px 0" }}>Get started with your developer workspace environment.</p>
 
-        {sucesso && (
-          <div style={{ color: "var(--accent-color)", border: "1px solid var(--accent-color)", padding: "10px", marginBottom: "20px", fontSize: "13px", background: "#090a0f" }}>
-            {sucesso}
-          </div>
-        )}
+        {erro && <div style={{ color: "var(--error)", fontSize: "13px", marginBottom: "16px" }}>{erro}</div>}
+        {sucesso && <div style={{ color: "var(--success)", fontSize: "13px", marginBottom: "16px" }}>{sucesso}</div>}
 
-        <form onSubmit={handleCadastro} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+        <form onSubmit={handleCadastro} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div>
-            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>REGISTRY_NAME</label>
-            <input 
-              type="text" 
-              value={nome} 
-              onChange={(e) => setNome(e.target.value)} 
-              placeholder="e.g. John Doe"
-              required 
-            />
+            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-muted)", fontSize: "12px" }}>Full Name</label>
+            <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} className="input-premium" required />
           </div>
-
           <div>
-            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>SYSTEM_EMAIL</label>
-            <input 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              placeholder="user@domain.com"
-              required 
-            />
+            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-muted)", fontSize: "12px" }}>Email Address</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-premium" required />
           </div>
-
           <div>
-            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>ACCESS_PASSWORD</label>
-            <input 
-              type="password" 
-              value={senha} 
-              onChange={(e) => setSenha(e.target.value)} 
-              placeholder="••••••••"
-              required 
-            />
+            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-muted)", fontSize: "12px" }}>Password</label>
+            <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} className="input-premium" required />
           </div>
-
           <div>
-            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "12px" }}>VERIFY_PASSWORD</label>
-            <input 
-              type="password" 
-              value={confirmarSenha} 
-              onChange={(e) => setConfirmarSenha(e.target.value)} 
-              placeholder="••••••••"
-              required 
-            />
+            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-muted)", fontSize: "12px" }}>Confirm Password</label>
+            <input type="password" value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} className="input-premium" required />
           </div>
 
-          <button type="submit" disabled={loading} className="btn-terminal" style={{ marginTop: "10px" }}>
-            {loading ? "COMMITTING_DATA..." : "EXECUTE_REGISTRATION"}
+          <button type="submit" disabled={loading} className="btn-premium" style={{ marginTop: "8px" }}>
+            {loading ? "Creating account..." : "Register Workspace"}
           </button>
         </form>
 
-        <p style={{ marginTop: "24px", fontSize: "13px", color: "var(--text-muted)", textAlign: "center" }}>
-          Existing token? <Link to="/login" style={{ color: "var(--accent-color)" }}>Return to Login</Link>
+        <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "24px", textAlign: "center", margin: "24px 0 0 0" }}>
+          Already have an account? <Link to="/login" style={{ color: "var(--accent-purple)", textDecoration: "none" }}>Sign In</Link>
         </p>
       </div>
     </div>
