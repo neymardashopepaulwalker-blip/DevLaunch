@@ -90,7 +90,7 @@ app.post('/api/projetos/salvar', async (req, res) => {
 
     // 2. Configura os Headers corretos para transferência estável na nuvem (Render)
     res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename=${nome_projeto}.zip`);
+    res.setHeader('Content-Disposition', `attachment; filename="${nome_projeto}.zip"`);
 
     // 3. Compactador ZIP rodando em stream direto para o navegador pela RAM
     const archive = archiver('zip', { zlib: { level: 9 } });
