@@ -96,20 +96,26 @@ app.post('/api/projetos/salvar', async (req, res) => {
     const archive = archiver('zip', { zlib: { level: 9 } });
     archive.pipe(res);
 
-    // 4. Monta os arquivos internos baseado no tipo selecionado (Prontos em inglês)
-    if (tipo_projeto === "Discord Bot") {
+    // =========================================================================
+    // 4. Monta os arquivos internos baseado nas strings exatas salvas no banco
+    // =========================================================================
+    if (tipo_projeto === "Discord Bot Base") {
       archive.append(`const { Client } = require('discord.js');\nconsole.log('Bot ${nome_projeto} Online!');`, { name: 'index.js' });
       archive.append(`DISCORD_TOKEN=your_token_here`, { name: '.env' });
       archive.append(`{\n  "name": "${nome_projeto.toLowerCase()}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
     } 
-    else if (tipo_projeto === "Node.js API") {
+    else if (tipo_projeto === "Node.js REST API") {
       archive.append(`const express = require('express');\nconst app = express();\napp.listen(5000, () => console.log('API ${nome_projeto} online!'));`, { name: 'server.js' });
       archive.append(`PORT=5000`, { name: '.env' });
       archive.append(`{\n  "name": "${nome_projeto.toLowerCase()}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
     } 
-    else { 
+    else if (tipo_projeto === "REACT.js Module") {
       archive.append(`import React from 'react';\nexport default function App() { return <h1>${nome_projeto} 🚀</h1> }`, { name: 'src/App.jsx' });
       archive.append(`{\n  "name": "${nome_projeto.toLowerCase()}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
+    }
+    else { 
+      // Fallback de segurança caso venha qualquer outra string inesperada
+      archive.append(`// Projeto: ${nome_projeto}\n// Tipo: ${tipo_projeto}`, { name: 'README.md' });
     }
 
     await archive.finalize();
