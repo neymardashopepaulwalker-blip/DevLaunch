@@ -1,203 +1,134 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 export default function Dashboard() {
-  const [history, setHistory] = useState([]);
-  const [customName, setCustomName] = useState("");
-  const [status, setStatus] = useState("");
-  const [statusType, setStatusType] = useState("info");
-  const [selectedStack, setSelectedStack] = useState("React Boilerplate");
-  
-  const navigate = useNavigate();
-  const userId = localStorage.getItem('usuario_id');
-  const userName = localStorage.getItem('usuario_nome') || "Developer";
+  const [projectName, setProjectName] = useState('');
+  const [projectType, setProjectType] = useState('Node.js REST API');
+  const [userId, setUserId] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const BACKEND_URL = "https://devlaunch-backend-uw21.onrender.com";
-
-  // Strict mapping to match your backend expectations perfectly
-  const backendMapping = {
-    "React Boilerplate": "REACT.js Module",
-    "Node.js API": "Node.js REST API",
-    "Discord Bot": "Discord Bot Base"
-  };
-
+  // Recupera o ID do usuário logado (Ajuste caso use Context API em vez de localStorage)
   useEffect(() => {
-    if (!userId) {
-      navigate('/login');
-    } else {
-      loadHistory();
-    }
-  }, [userId]);
-
-  const loadHistory = async () => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/projetos/lista/${userId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setHistory(data.projetos || []);
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUserId(parsedUser.id);
+      } catch (e) {
+        console.error("Error reading user from localStorage", e);
       }
-    } catch (err) {
-      console.error("Error syncing history data:", err);
     }
-  };
+  }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/login');
-  };
-
-  const handleGenerateProject = async () => {
-    const finalName = customName.trim() || `Project_${selectedStack.replace(/\s+/g, '_')}`;
-    setStatus(`Compiling production files for ${finalName}...`);
-    setStatusType("info");
+  const compileAndDownloadProject = async () => {
+    setIsGenerating(true);
+    
+    // Tratamento de segurança para o nome do projeto
+    const safeName = projectName ? projectName.trim() : 'devlaunch_project';
+    const typeLower = projectType ? projectType.toLowerCase() : '';
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/projetos/salvar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          usuario_id: userId, 
-          tipo_projeto: backendMapping[selectedStack],
-          nome_projeto: finalName
-        })
-      });
+      // 1. Manda pro Backend APENAS para salvar no histórico do Supabase
+      // Enviamos as chaves em português porque o seu backend espera exatamente esses nomes!
+      if (userId) {
+        fetch('https://devlaunch-backend-uw21.onrender.com/api/projetos/salvar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            usuario_id: userId, 
+            tipo_projeto: projectType, 
+            nome_projeto: safeName 
+          })
+        }).catch(err => console.error("Error saving to history:", err));
+      }
 
-      if (!res.ok) throw new Error("Server build generation pipeline failed.");
+      // 2. Monta o ZIP na memória do navegador (Instantâneo)
+      const zip = new JSZip();
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${finalName}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      if (typeLower.includes('discord')) {
+        zip.file("index.js", `const { Client } = require('discord.js');\nconsole.log('Bot ${safeName} Online!');`);
+        zip.file(".env", "DISCORD_TOKEN=your_token_here");
+        zip.file("package.json", `{\n  "name": "${safeName.toLowerCase().replace(/[^a-z0-9]/g, '-')}",\n  "version": "1.0.0"\n}`);
+      } 
+      else if (typeLower.includes('node') || typeLower.includes('api')) {
+        zip.file("server.js", `const express = require('express');\nconst app = express();\napp.listen(5000, () => console.log('API ${safeName} online!'));`);
+        zip.file(".env", "PORT=5000");
+        zip.file("package.json", `{\n  "name": "${safeName.toLowerCase().replace(/[^a-z0-9]/g, '-')}",\n  "version": "1.0.0"\n}`);
+      } 
+      else { 
+        // Boilerplate React
+        zip.folder("src").file("App.jsx", `import React from 'react';\nexport default function App() { return <h1>${safeName} 🚀</h1> }`);
+        zip.file("package.json", `{\n  "name": "${safeName.toLowerCase().replace(/[^a-z0-9]/g, '-')}",\n  "version": "1.0.0"\n}`);
+      }
 
-      setStatus(`Success! ${finalName}.zip downloaded successfully.`);
-      setStatusType("success");
-      setCustomName("");
-      loadHistory(); 
-    } catch (err) {
-      setStatus(`Download pipeline failed: ${err.message}`);
-      setStatusType("error");
+      // 3. Força o download imediatamente para o usuário
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, `${safeName}.zip`);
+
+    } catch (error) {
+      console.error("Fatal error generating ZIP:", error);
+      alert("Failed to generate the project file. Please try again.");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      
-      {/* NAVBAR */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 40px", borderBottom: "1px solid var(--border-glow)", backgroundColor: "var(--bg-card)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "var(--accent)" }}></div>
-          <span style={{ fontWeight: "700", fontSize: "15px", letterSpacing: "0.5px" }}>DEVLAUNCH</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>Welcome back, <strong style={{ color: "#fff" }}>{userName}</strong></span>
-          <button onClick={handleLogout} className="secondary-button" style={{ padding: "6px 14px", borderRadius: "6px", cursor: "pointer", fontSize: "13px" }}>
-            Sign Out
-          </button>
-        </div>
-      </nav>
+    <div style={{ padding: '40px', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif' }}>
+      <h2>🚀 DevLaunch Dashboard</h2>
+      <p>Configure your new project and download the boilerplate instantly.</p>
 
-      {/* NOTIFICATION BANNER */}
-      {status && (
-        <div style={{ 
-          padding: "12px 40px", 
-          backgroundColor: statusType === "error" ? "rgba(239, 68, 68, 0.08)" : statusType === "success" ? "rgba(16, 185, 129, 0.08)" : "rgba(124, 58, 237, 0.08)",
-          borderBottom: "1px solid " + (statusType === "error" ? "#ef4444" : statusType === "success" ? "#10b981" : "var(--accent)"),
-          color: statusType === "error" ? "#f87171" : statusType === "success" ? "#34d399" : "#a78bfa",
-          fontSize: "13px", textAlign: "center", fontWeight: "500"
-        }}>
-          {status}
-        </div>
-      )}
-
-      {/* MAIN CONTAINER */}
-      <div style={{ maxWidth: "1000px", width: "100%", margin: "40px auto", padding: "0 20px", display: "flex", flexDirection: "column", gap: "32px" }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '25px' }}>
         
-        {/* SECTION 1: STACK CARDS */}
+        {/* Project Name Input */}
         <div>
-          <h2 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "16px", color: "#fff" }}>1. Select Base Infrastructure</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-            {[
-              { id: "React Boilerplate", desc: "Vite-powered environment ready with fundamental structural routing rules.", tag: "FRONTEND" },
-              { id: "Node.js API", desc: "Modular Express engine pre-configured with CORS and structured systems.", tag: "BACKEND" },
-              { id: "Discord Bot", desc: "Isolated modular baseline architecture leveraging the Discord.js framework.", tag: "AUTOMATION" }
-            ].map((stack) => (
-              <div 
-                key={stack.id}
-                onClick={() => setSelectedStack(stack.id)}
-                className="interactive-card"
-                style={{
-                  padding: "24px",
-                  backgroundColor: "var(--bg-card)",
-                  borderRadius: "10px",
-                  border: "2px solid " + (selectedStack === stack.id ? "var(--accent)" : "var(--border-glow)"),
-                  cursor: "pointer",
-                  boxShadow: selectedStack === stack.id ? "0 0 20px rgba(124, 58, 237, 0.15)" : "none"
-                }}
-              >
-                <span style={{ fontSize: "10px", fontWeight: "700", color: "var(--accent)", letterSpacing: "1px", display: "block", marginBottom: "8px" }}>{stack.tag}</span>
-                <h3 style={{ fontSize: "16px", margin: "0 0 8px 0", color: "#fff" }}>{stack.id}</h3>
-                <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0, lineHeight: "1.4" }}>{stack.desc}</p>
-              </div>
-            ))}
-          </div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            Project Name
+          </label>
+          <input 
+            type="text" 
+            placeholder="e.g., my-awesome-app" 
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+            style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+          />
         </div>
 
-        {/* SECTION 2: ACTIONS & LOGS */}
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px", alignItems: "start" }}>
-          
-          {/* Setup Card */}
-          <div style={{ backgroundColor: "var(--bg-card)", padding: "32px", borderRadius: "10px", border: "1px solid var(--border-glow)" }}>
-            <h3 style={{ fontSize: "16px", margin: "0 0 20px 0", color: "#fff" }}>2. File Customization</h3>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
-              <label style={{ fontSize: "13px", color: "var(--text-muted)", fontWeight: "500" }}>Project Name (Optional)</label>
-              <input 
-                type="text"
-                placeholder={`e.g., my-custom-${selectedStack.toLowerCase().replace(/\s+/g, '-')}`}
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                style={{
-                  width: "100%", padding: "12px 16px", backgroundColor: "var(--bg-input)", 
-                  border: "1px solid var(--border-glow)", borderRadius: "8px", color: "#fff", outline: "none", fontSize: "14px"
-                }}
-              />
-            </div>
-
-            <button 
-              onClick={handleGenerateProject}
-              className="primary-button"
-              style={{
-                width: "100%", padding: "14px", border: "none",
-                borderRadius: "8px", color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(124, 58, 237, 0.3)"
-              }}
-            >
-              Compile and Download Project ZIP
-            </button>
-          </div>
-
-          {/* History Panel */}
-          <div style={{ backgroundColor: "var(--bg-card)", padding: "24px", borderRadius: "10px", border: "1px solid var(--border-glow)", minHeight: "220px", display: "flex", flexDirection: "column" }}>
-            <h3 style={{ fontSize: "14px", margin: "0 0 16px 0", color: "#fff" }}>Recent Downloads</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", maxHeight: "160px" }}>
-              {history.length === 0 ? (
-                <span style={{ fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic" }}>No download history recorded.</span>
-              ) : (
-                history.map((proj, idx) => (
-                  <div key={idx} style={{ paddingBottom: "10px", borderBottom: "1px solid #1f1f23", display: "flex", flexDirection: "column", gap: "2px" }}>
-                    <span style={{ fontSize: "13px", color: "#fff", fontWeight: "500" }}>{proj.nome_projeto}</span>
-                    <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{proj.tipo_projeto}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
+        {/* Project Type Selector */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            Project Type
+          </label>
+          <select 
+            value={projectType} 
+            onChange={(e) => setProjectType(e.target.value)}
+            style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+          >
+            <option value="Node.js REST API">Node.js REST API</option>
+            <option value="Discord Bot Base">Discord Bot Base</option>
+            <option value="REACT.js Module">REACT.js Module</option>
+          </select>
         </div>
+
+        {/* Compile & Download Button */}
+        <button 
+          onClick={compileAndDownloadProject} 
+          disabled={isGenerating}
+          style={{ 
+            marginTop: '15px',
+            padding: '12px', 
+            backgroundColor: isGenerating ? '#9ca3af' : '#6366f1', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '5px', 
+            fontSize: '16px',
+            fontWeight: 'bold',
+            cursor: isGenerating ? 'not-allowed' : 'pointer' 
+          }}
+        >
+          {isGenerating ? 'Generating Pipeline...' : 'Compile & Download ZIP'}
+        </button>
 
       </div>
     </div>

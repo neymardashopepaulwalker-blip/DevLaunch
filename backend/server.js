@@ -1,9 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
-const archiver = require('archiver');
-const fs = require('fs');
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -16,16 +13,15 @@ const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.get('/', (req, res) => {
-  res.send('🚀 DevLaunch Backend Running Smoothly!');
+  res.send('🚀 DevLaunch Backend (Modo Leve) Running!');
 });
 
 // ==========================================
-// 🔐 ROTA DE CADASTRO
+// 🔐 ROTAS DE AUTH (Mantidas Iguais)
 // ==========================================
 app.post('/api/auth/cadastro', async (req, res) => {
   const { nome, email, senha } = req.body;
   if (!nome || !email || !senha) return res.status(400).json({ erro: "Incomplete fields." });
-
   try {
     const { data, error } = await supabase.from('usuarios').insert([{ nome, email, senha }]).select();
     if (error) return res.status(400).json({ erro: error.message });
@@ -35,34 +31,21 @@ app.post('/api/auth/cadastro', async (req, res) => {
   }
 });
 
-// ==========================================
-// 🔑 ROTA DE LOGIN
-// ==========================================
 app.post('/api/auth/login', async (req, res) => {
   const { email, senha } = req.body;
   try {
     const { data: usuario, error } = await supabase.from('usuarios').select('*').eq('email', email).single();
-    if (error || !usuario || usuario.senha !== senha) {
-      return res.status(400).json({ erro: "Incorrect email or password." });
-    }
+    if (error || !usuario || usuario.senha !== senha) return res.status(400).json({ erro: "Incorrect credentials." });
     res.json({ mensagem: "Sucesso!", user: { id: usuario.id, nome: usuario.nome, email: usuario.email } });
   } catch (err) {
     res.status(500).json({ erro: "Internal server error." });
   }
 });
 
-// ==========================================
-// 📜 ROTA PARA BUSCAR HISTÓRICO
-// ==========================================
 app.get('/api/projetos/lista/:usuario_id', async (req, res) => {
   const { usuario_id } = req.params;
   try {
-    const { data: projetos, error } = await supabase
-      .from('projetos')
-      .select('*')
-      .eq('usuario_id', usuario_id)
-      .order('criado_em', { ascending: false });
-
+    const { data: projetos, error } = await supabase.from('projetos').select('*').eq('usuario_id', usuario_id).order('criado_em', { ascending: false });
     if (error) return res.status(400).json({ erro: error.message });
     res.json({ projetos });
   } catch (err) {
@@ -70,8 +53,19 @@ app.get('/api/projetos/lista/:usuario_id', async (req, res) => {
   }
 });
 
+app.post('/api/auth/mudar-senha', async (req, res) => {
+  const { usuario_id, novaSenha } = req.body;
+  try {
+    const { error } = await supabase.from('usuarios').update({ senha: novaSenha }).eq('id', usuario_id);
+    if (error) return res.status(400).json({ erro: error.message });
+    res.json({ mensagem: "Password changed successfully!" });
+  } catch (err) {
+    res.status(500).json({ erro: "Error changing password." });
+  }
+});
+
 // ==========================================
-// 📁 ROTA PARA SALVAR NO BANCO E GERAR O ZIP
+// 📁 ROTA PARA SALVAR NO BANCO (AGORA SEM ZIP)
 // ==========================================
 app.post('/api/projetos/salvar', async (req, res) => {
   const { usuario_id, tipo_projeto, nome_projeto } = req.body;
@@ -81,78 +75,17 @@ app.post('/api/projetos/salvar', async (req, res) => {
   }
 
   try {
-    // 1. Salva o registro histórico no Supabase primeiro
     const { error } = await supabase
       .from('projetos')
       .insert([{ usuario_id, tipo_projeto, nome_projeto }]);
 
     if (error) return res.status(400).json({ erro: error.message });
 
-    // 2. Configura os Headers de transferência
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename="${nome_projeto || 'projeto'}.zip"`);
-
-    // 3. Cria o empacotador e faz o pipe
-    const archive = archiver('zip', { zlib: { level: 9 } });
-
-    // GARANTIA DE ENTREGA: Promisifica o stream para prender a rota até o download terminar 100%
-    const streamFinalizado = new Promise((resolve, reject) => {
-      res.on('finish', () => resolve());
-      res.on('close', () => resolve());
-      archive.on('error', (err) => reject(err));
-    });
-
-    archive.pipe(res);
-
-    // 4. Mapeamento flexível por strings do banco de dados
-    const tipoLower = tipo_projeto.toLowerCase();
-
-    if (tipoLower.includes('discord')) {
-      archive.append(`const { Client } = require('discord.js');\nconsole.log('Bot ${nome_projeto} Online!');`, { name: 'index.js' });
-      archive.append(`DISCORD_TOKEN=your_token_here`, { name: '.env' });
-      archive.append(`{\n  "name": "${nome_projeto.toLowerCase().replace(/\s+/g, '-')}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
-    } 
-    else if (tipoLower.includes('node') || tipoLower.includes('api')) {
-      archive.append(`const express = require('express');\nconst app = express();\napp.listen(5000, () => console.log('API ${nome_projeto} online!'));`, { name: 'server.js' });
-      archive.append(`PORT=5000`, { name: '.env' });
-      archive.append(`{\n  "name": "${nome_projeto.toLowerCase().replace(/\s+/g, '-')}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
-    } 
-    else { 
-      // Captura o React Boilerplate / REACT.js Module
-      archive.append(`import React from 'react';\nexport default function App() { return <h1>${nome_projeto} 🚀</h1> }`, { name: 'src/App.jsx' });
-      archive.append(`{\n  "name": "${nome_projeto.toLowerCase().replace(/\s+/g, '-')}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
-    }
-
-    // Dispara a compactação
-    await archive.finalize();
-    
-    // Aguarda o envio total dos dados pela rede antes de liberar o express
-    await streamFinalizado;
+    // Retorna apenas sucesso. O Frontend cuida do resto!
+    res.json({ sucesso: true, mensagem: "Projeto registrado no histórico!" });
 
   } catch (err) {
-    console.error("Erro no pipeline de download:", err);
-    if (!res.headersSent) {
-      res.status(500).json({ erro: "Server build generation pipeline failed." });
-    }
-  }
-});
-
-// ==========================================
-// 🔐 ROTA PARA ALTERAR SENHA
-// ==========================================
-app.post('/api/auth/mudar-senha', async (req, res) => {
-  const { usuario_id, novaSenha } = req.body;
-
-  try {
-    const { error } = await supabase
-      .from('usuarios')
-      .update({ senha: novaSenha })
-      .eq('id', usuario_id);
-
-    if (error) return res.status(400).json({ erro: error.message });
-    res.json({ mensagem: "Password changed successfully!" });
-  } catch (err) {
-    res.status(500).json({ erro: "Error changing password." });
+    res.status(500).json({ erro: "Erro ao salvar no banco." });
   }
 });
 
