@@ -81,48 +81,59 @@ app.post('/api/projetos/salvar', async (req, res) => {
   }
 
   try {
-    // 1. Salva o registro histórico no Supabase
+    // 1. Salva o registro histórico no Supabase primeiro
     const { error } = await supabase
       .from('projetos')
       .insert([{ usuario_id, tipo_projeto, nome_projeto }]);
 
     if (error) return res.status(400).json({ erro: error.message });
 
-    // 2. Configura os Headers corretos para transferência estável na nuvem (Render)
+    // 2. Configura os Headers de transferência
     res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename="${nome_projeto}.zip"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${nome_projeto || 'projeto'}.zip"`);
 
-    // 3. Compactador ZIP rodando em stream direto para o navegador pela RAM
+    // 3. Cria o empacotador e faz o pipe
     const archive = archiver('zip', { zlib: { level: 9 } });
+
+    // GARANTIA DE ENTREGA: Promisifica o stream para prender a rota até o download terminar 100%
+    const streamFinalizado = new Promise((resolve, reject) => {
+      res.on('finish', () => resolve());
+      res.on('close', () => resolve());
+      archive.on('error', (err) => reject(err));
+    });
+
     archive.pipe(res);
 
-    // =========================================================================
-    // 4. Monta os arquivos internos baseado nas strings exatas salvas no banco
-    // =========================================================================
-    if (tipo_projeto === "Discord Bot Base") {
+    // 4. Mapeamento flexível por strings do banco de dados
+    const tipoLower = tipo_projeto.toLowerCase();
+
+    if (tipoLower.includes('discord')) {
       archive.append(`const { Client } = require('discord.js');\nconsole.log('Bot ${nome_projeto} Online!');`, { name: 'index.js' });
       archive.append(`DISCORD_TOKEN=your_token_here`, { name: '.env' });
-      archive.append(`{\n  "name": "${nome_projeto.toLowerCase()}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
+      archive.append(`{\n  "name": "${nome_projeto.toLowerCase().replace(/\s+/g, '-')}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
     } 
-    else if (tipo_projeto === "Node.js REST API") {
+    else if (tipoLower.includes('node') || tipoLower.includes('api')) {
       archive.append(`const express = require('express');\nconst app = express();\napp.listen(5000, () => console.log('API ${nome_projeto} online!'));`, { name: 'server.js' });
       archive.append(`PORT=5000`, { name: '.env' });
-      archive.append(`{\n  "name": "${nome_projeto.toLowerCase()}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
+      archive.append(`{\n  "name": "${nome_projeto.toLowerCase().replace(/\s+/g, '-')}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
     } 
-    else if (tipo_projeto === "REACT.js Module") {
-      archive.append(`import React from 'react';\nexport default function App() { return <h1>${nome_projeto} 🚀</h1> }`, { name: 'src/App.jsx' });
-      archive.append(`{\n  "name": "${nome_projeto.toLowerCase()}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
-    }
     else { 
-      // Fallback de segurança caso venha qualquer outra string inesperada
-      archive.append(`// Projeto: ${nome_projeto}\n// Tipo: ${tipo_projeto}`, { name: 'README.md' });
+      // Captura o React Boilerplate / REACT.js Module
+      archive.append(`import React from 'react';\nexport default function App() { return <h1>${nome_projeto} 🚀</h1> }`, { name: 'src/App.jsx' });
+      archive.append(`{\n  "name": "${nome_projeto.toLowerCase().replace(/\s+/g, '-')}",\n  "version": "1.0.0"\n}`, { name: 'package.json' });
     }
 
+    // Dispara a compactação
     await archive.finalize();
+    
+    // Aguarda o envio total dos dados pela rede antes de liberar o express
+    await streamFinalizado;
 
   } catch (err) {
-    console.error(err);
-    if (!res.headersSent) res.status(500).json({ erro: "Error generating zip." });
+    console.error("Erro no pipeline de download:", err);
+    if (!res.headersSent) {
+      res.status(500).json({ erro: "Server build generation pipeline failed." });
+    }
   }
 });
 
