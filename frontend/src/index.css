@@ -1,9 +1,9 @@
 :root {
-  --bg-main: #09090b;          /* Fundo dark profundo e limpo */
-  --bg-card: #141417;          /* Cards ligeiramente mais claros */
-  --bg-input: #1d1d22;         /* Inputs elegantes */
-  --border-glow: #2d2d34;      /* Bordas finas modernas */
-  --accent: #7c3aed;           /* Roxo vivo e imersivo */
+  --bg-main: #09090b;          /* Deep premium dark background */
+  --bg-card: #141417;          /* Sleek card surfaces */
+  --bg-input: #1d1d22;         /* Input fields */
+  --border-glow: #2d2d34;      /* High-end subtle borders */
+  --accent: #7c3aed;           /* Vibrant electric purple */
   --accent-hover: #6d28d9;
   --text-main: #f4f4f5;
   --text-muted: #a1a1aa;
@@ -19,4 +19,37 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+/* Safe CSS hover states to prevent JS compilation errors */
+.primary-button {
+  background-color: var(--accent);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.primary-button:hover {
+  background-color: var(--accent-hover);
+}
+
+.primary-button:active {
+  transform: scale(0.98);
+}
+
+.secondary-button {
+  background: transparent;
+  border: 1px solid var(--border-glow);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.secondary-button:hover {
+  border-color: var(--text-muted);
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.interactive-card {
+  transition: all 0.2s ease;
+}
+.interactive-card:hover {
+  transform: translateY(-2px);
 }
