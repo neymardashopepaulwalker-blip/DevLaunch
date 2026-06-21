@@ -1,40 +1,22 @@
 :root {
-  --bg-dark-obsidian: #08070b;
-  --bg-card-charcoal: #111015;
-  --bg-input-dark: #16151a;
-  --border-subtle: #222127;
-  --accent-premium: #8b5cf6; /* Roxo Elétrico Premium */
-  --text-primary: #f3f4f6;
-  --text-secondary: #9ca3af;
-  --text-muted: #4b5563;
-  --color-error: #ef4444;
-  --color-success: #10b981;
+  --bg-main: #09090b;          /* Fundo dark profundo e limpo */
+  --bg-card: #141417;          /* Cards ligeiramente mais claros */
+  --bg-input: #1d1d22;         /* Inputs elegantes */
+  --border-glow: #2d2d34;      /* Bordas finas modernas */
+  --accent: #7c3aed;           /* Roxo vivo e imersivo */
+  --accent-hover: #6d28d9;
+  --text-main: #f4f4f5;
+  --text-muted: #a1a1aa;
 }
 
 body {
   margin: 0;
-  background-color: var(--bg-dark-obsidian);
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 * {
   box-sizing: border-box;
-}
-
-/* Custom Scrollbar para o painel de código */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-dark-obsidian);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-premium);
 }

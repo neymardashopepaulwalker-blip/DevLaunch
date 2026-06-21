@@ -5,40 +5,19 @@ export default function Dashboard() {
   const [historico, setHistorico] = useState([]);
   const [nomeCustomizado, setNomeCustomizado] = useState("");
   const [status, setStatus] = useState("");
-  const [statusTipo, setStatusTipo] = useState("info"); // info, success, error
+  const [statusTipo, setStatusTipo] = useState("info");
   const [stackSelecionada, setStackSelecionada] = useState("React Boilerplate");
   
   const navigate = useNavigate();
   const idUsuario = localStorage.getItem('usuario_id');
   const nomeUsuario = localStorage.getItem('usuario_nome') || "Developer";
-  const emailUsuario = localStorage.getItem('usuario_email') || "";
 
   const BACKEND_URL = "https://devlaunch-backend-uw21.onrender.com";
 
-  // Mapeamento estável de Strings para o Banco de dados
   const mapeamentoBackend = {
     "React Boilerplate": "REACT.js Module",
     "Node.js API": "Node.js REST API",
     "Discord Bot": "Discord Bot Base"
-  };
-
-  // Mock de arquivos estáticos para o Code Preview
-  const previewsDasStacks = {
-    "React Boilerplate": {
-      arquivos: ["src/main.jsx", "src/App.jsx", "src/index.css", "package.json", "vite.config.js"],
-      arquivoAtivo: "src/App.jsx",
-      codigo: `import React from 'react';\nimport './index.css';\n\nexport default function App() {\n  return (\n    <div className="app-container">\n      <h1>Application Environment Online</h1>\n      <p>Boilerplate engine mounted successfully.</p>\n    </div>\n  );\n}`
-    },
-    "Node.js API": {
-      arquivos: ["server.js", "routes/api.js", "middleware/auth.js", "package.json", ".env.example"],
-      arquivoAtivo: "server.js",
-      codigo: `const express = require('express');\nconst cors = require('cors');\nconst app = express();\n\napp.use(cors());\napp.use(express.json());\n\napp.get('/api/health', (req, res) => {\n  res.status(200).json({ status: 'healthy', timestamp: Date.now() });\n});\n\nconst PORT = process.env.PORT || 5000;\napp.listen(PORT, () => console.log(\`Server online on port \${PORT}\`));`
-    },
-    "Discord Bot": {
-      arquivos: ["index.js", "commands/ping.js", "events/ready.js", "package.json", "config.json"],
-      arquivoAtivo: "index.js",
-      codigo: `const { Client, GatewayIntentBits } = require('discord.js');\nconst client = new Client({ intents: [GatewayIntentBits.Guilds] });\n\nclient.once('ready', () => {\n  console.log(\`Logged in securely as \${client.user.tag}\`);\n});\n\nclient.login(process.env.DISCORD_TOKEN);`
-    }
   };
 
   useEffect(() => {
@@ -57,7 +36,7 @@ export default function Dashboard() {
         setHistorico(dados.projetos || []);
       }
     } catch (err) {
-      console.error("Failed history synchronization:", err);
+      console.error("Erro ao sincronizar histórico:", err);
     }
   };
 
@@ -68,7 +47,7 @@ export default function Dashboard() {
 
   const handleGerarProjeto = async () => {
     const nomeFinal = nomeCustomizado.trim() || `Project_${stackSelecionada.replace(/\s+/g, '_')}`;
-    setStatus(`Compiling production bundle matrix for ${nomeFinal}...`);
+    setStatus(`Compilando os arquivos do projeto ${nomeFinal}...`);
     setStatusTipo("info");
 
     try {
@@ -82,11 +61,7 @@ export default function Dashboard() {
         })
       });
 
-      if (!res.ok) {
-        const textoErro = await res.text();
-        console.error("Detailed server payload response error:", textoErro);
-        throw new Error(`Server returned status ${res.status}. Database schema constraint block.`);
-      }
+      if (!res.ok) throw new Error("Erro na geração do build no servidor.");
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -97,172 +72,129 @@ export default function Dashboard() {
       a.click();
       a.remove();
 
-      setStatus(`Success. ${nomeFinal}.zip successfully saved to local device storage.`);
+      setStatus(`Pronto! O arquivo ${nomeFinal}.zip foi baixado com sucesso.`);
       setStatusTipo("success");
       setNomeCustomizado("");
       carregarHistorico(); 
     } catch (err) {
-      setStatus(`Generation Pipeline Error: ${err.message}`);
+      setStatus(`Erro no pipeline de download: ${err.message}`);
       setStatusTipo("error");
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-dark-obsidian)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       
-      {/* HEADER DE ALTA ENGENHARIA */}
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 40px", borderBottom: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-card-charcoal)" }}>
-        <div>
-          <span style={{ fontWeight: "700", letterSpacing: "1px", color: "#fff", fontSize: "16px" }}>DEVLAUNCH // WORKSPACE</span>
-          <div style={{ color: "var(--text-secondary)", fontSize: "13px", marginTop: "4px" }}>
-            Node Identifier: <span style={{ color: "var(--text-primary)" }}>{nomeUsuario}</span> — {emailUsuario}
-          </div>
+      {/* NAVBAR CLEAN */}
+      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 40px", borderBottom: "1px solid var(--border-glow)", backgroundColor: "var(--bg-card)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "var(--accent)" }}></div>
+          <span style={{ fontWeight: "700", fontSize: "15px", letterSpacing: "0.5px" }}>DEVLAUNCH</span>
         </div>
-        <button onClick={handleLogout} style={{ background: "transparent", border: "1px solid var(--border-subtle)", color: "var(--text-primary)", padding: "8px 16px", cursor: "pointer", fontSize: "13px" }}>
-          Disconnect
-        </button>
-      </header>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>Olá, <strong style={{ color: "#fff" }}>{nomeUsuario}</strong></span>
+          <button onClick={handleLogout} style={{ background: "transparent", border: "1px solid var(--border-glow)", color: "var(--text-main)", padding: "6px 14px", borderRadius: "6px", cursor: "pointer", fontSize: "13px" }}>
+            Sair
+          </button>
+        </div>
+      </nav>
 
-      {/* NOTIFICAÇÃO DO SISTEMA CORRIGIDA */}
+      {/* BANNER DE STATUS DISCRETO */}
       {status && (
         <div style={{ 
-          padding: "16px 40px", 
-          backgroundColor: statusTipo === "error" ? "rgba(239, 68, 68, 0.1)" : statusTipo === "success" ? "rgba(16, 185, 129, 0.1)" : "rgba(139, 92, 246, 0.1)",
-          borderBottom: "1px solid " + (statusTipo === "error" ? "var(--color-error)" : statusTipo === "success" ? "var(--color-success)" : "var(--accent-premium)"),
-          color: statusTipo === "error" ? "var(--color-error)" : statusTipo === "success" ? "var(--color-success)" : "var(--accent-premium)",
-          fontSize: "13px",
-          fontFamily: "monospace"
+          padding: "12px 40px", 
+          backgroundColor: statusTipo === "error" ? "rgba(239, 68, 68, 0.08)" : statusTipo === "success" ? "rgba(16, 185, 129, 0.08)" : "rgba(124, 58, 237, 0.08)",
+          borderBottom: "1px solid " + (statusTipo === "error" ? "#ef4444" : statusTipo === "success" ? "#10b981" : "var(--accent)"),
+          color: statusTipo === "error" ? "#f87171" : statusTipo === "success" ? "#34d399" : "#a78bfa",
+          fontSize: "13px", textAlign: "center"
         }}>
           {status}
         </div>
       )}
 
-      {/* PAINEL CENTRAL DUPLO */}
-      <div style={{ display: "grid", gridTemplateColumns: "450px 1fr", flex: 1 }}>
+      {/* ÁREA CENTRAL - DESIGN DE GRID COMPACTO */}
+      <div style={{ maxWidth: "1000px", width: "100%", margin: "40px auto", padding: "0 20px", display: "flex", flexDirection: "column", gap: "32px" }}>
         
-        {/* COLUNA ESQUERDA: GERENCIAMENTO */}
-        <div style={{ padding: "40px", borderRight: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", gap: "32px" }}>
-          
-          <div>
-            <h3 style={{ fontSize: "14px", color: "#fff", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 16px 0" }}>Select Core Stack</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {["React Boilerplate", "Node.js API", "Discord Bot"].map((stack) => (
-                <div 
-                  key={stack}
-                  onClick={() => setStackSelecionada(stack)}
-                  style={{
-                    padding: "16px",
-                    backgroundColor: "var(--bg-card-charcoal)",
-                    border: "1px solid " + (stackSelecionada === stack ? "var(--accent-premium)" : "var(--border-subtle)"),
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: stackSelecionada === stack ? "600" : "400",
-                    color: stackSelecionada === stack ? "#fff" : "var(--text-secondary)",
-                    transition: "all 0.15s ease"
-                  }}
-                >
-                  {stack}
-                </div>
-              ))}
-            </div>
+        {/* SESSÃO 1: SELEÇÃO DA STACK EM CARDS */}
+        <div>
+          <h2 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "16px", color: "#fff" }}>1. Escolha a Infraestrutura Base</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+            {[
+              { id: "React Boilerplate", desc: "Ambiente React estruturado via Vite com gerenciamento de rotas básico.", tag: "FRONTEND" },
+              { id: "Node.js API", desc: "Motor Express estruturado com tratamento de CORS e rotas modulares.", tag: "BACKEND" },
+              { id: "Discord Bot", desc: "Arquitetura base isolada para bots de Discord integrada ao Discord.js.", tag: "AUTOMATION" }
+            ].map((stack) => (
+              <div 
+                key={stack.id}
+                onClick={() => setStackSelecionada(stack.id)}
+                style={{
+                  padding: "24px",
+                  backgroundColor: "var(--bg-card)",
+                  borderRadius: "10px",
+                  border: "2px solid " + (stackSelecionada === stack.id ? "var(--accent)" : "var(--border-glow)"),
+                  cursor: "pointer",
+                  boxShadow: stackSelecionada === stack.id ? "0 0 20px rgba(124, 58, 237, 0.15)" : "none",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                <span style={{ fontSize: "10px", fontWeight: "700", color: "var(--accent)", letterSpacing: "1px", display: "block", marginBottom: "8px" }}>{stack.tag}</span>
+                <h3 style={{ fontSize: "16px", margin: "0 0 8px 0", color: "#fff" }}>{stack.id}</h3>
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0, lineHeight: "1.4" }}>{stack.desc}</p>
+              </div>
+            ))}
           </div>
+        </div>
 
-          <div>
-            <h3 style={{ fontSize: "14px", color: "#fff", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 16px 0" }}>Configuration</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <label style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Output Name Prefix</label>
+        {/* SESSÃO 2: CONFIGURAÇÃO E ENVIO */}
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px", alignItems: "start" }}>
+          
+          {/* Card Principal de Setup */}
+          <div style={{ backgroundColor: "var(--bg-card)", padding: "32px", borderRadius: "10px", border: "1px solid var(--border-glow)" }}>
+            <h3 style={{ fontSize: "16px", margin: "0 0 20px 0" }}>2. Customização do Arquivo</h3>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+              <label style={{ fontSize: "13px", color: "var(--text-muted)", fontWeight: "500" }}>Nome do Projeto (Opcional)</label>
               <input 
                 type="text"
-                placeholder="e.g. production-api-v1"
+                placeholder={`Ex: meu-projeto-${stackSelecionada.toLowerCase().replace(/\s+/g, '-')}`}
                 value={nomeCustomizado}
                 onChange={(e) => setNomeCustomizado(e.target.value)}
                 style={{
-                  width: "100%", padding: "12px", backgroundColor: "var(--bg-input-dark)", 
-                  border: "1px solid var(--border-subtle)", color: "#fff", outline: "none", fontSize: "14px"
+                  width: "100%", padding: "12px 16px", backgroundColor: "var(--bg-input)", 
+                  border: "1px solid var(--border-glow)", borderRadius: "8px", color: "#fff", outline: "none", fontSize: "14px"
                 }}
               />
             </div>
+
+            <button 
+              onClick={handleGerarProjeto}
+              style={{
+                width: "100%", padding: "14px", backgroundColor: "var(--accent)", border: "none",
+                borderRadius: "8px", color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(124, 58, 237, 0.3)", transition: "background 0.2s"
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = "var(--accent-hover)"}
+              onMouseLeave={(e) => e.target.style.backgroundColor = "var(--accent)"}
+            >
+              Compilar e Baixar ZIP do Projeto
+            </button>
           </div>
 
-          <button 
-            onClick={handleGerarProjeto}
-            style={{
-              width: "100%", padding: "16px", backgroundColor: "var(--accent-premium)", border: "none",
-              color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px"
-            }}
-          >
-            Compile and Stream ZIP
-          </button>
-
-          {/* SESSÃO DE LOGS HISTÓRICOS */}
-          <div style={{ marginTop: "auto", paddingTop: "20px", borderTop: "1px solid var(--border-subtle)" }}>
-            <h4 style={{ fontSize: "12px", color: "var(--text-secondary)", textTransform: "uppercase", margin: "0 0 12px 0" }}>Historic Deployments ({historico.length})</h4>
-            <div style={{ maxHeight: "150px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
+          {/* Card Lateral de Histórico */}
+          <div style={{ backgroundColor: "var(--bg-card)", padding: "24px", borderRadius: "10px", border: "1px solid var(--border-glow)", minHeight: "220px", display: "flex", flexDirection: "column" }}>
+            <h3 style={{ fontSize: "14px", margin: "0 0 16px 0", color: "#fff" }}>Downloads Recentes</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", maxThight: "160px" }}>
               {historico.length === 0 ? (
-                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Registry system idle.</span>
+                <span style={{ fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic" }}>Nenhum download registrado.</span>
               ) : (
                 historico.map((proj, idx) => (
-                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "var(--text-secondary)", padding: "4px 0" }}>
-                    <span style={{ color: "var(--text-primary)", fontFamily: "monospace" }}>&gt; {proj.nome_projeto}</span>
-                    <span style={{ color: "var(--text-muted)" }}>{proj.tipo_projeto}</span>
+                  <div key={idx} style={{ paddingBottom: "10px", borderBottom: "1px solid #1f1f23", display: "flex", flexDirection: "column", gap: "2px" }}>
+                    <span style={{ fontSize: "13px", color: "#fff", fontWeight: "500" }}>{proj.nome_projeto}</span>
+                    <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{proj.tipo_projeto}</span>
                   </div>
                 ))
               )}
             </div>
-          </div>
-
-        </div>
-
-        {/* COLUNA DIREITA: LIVE ARCHIVE PREVIEW */}
-        <div style={{ backgroundColor: "#040306", display: "flex", flexDirection: "column" }}>
-          
-          {/* Subheader do Preview */}
-          <div style={{ padding: "14px 30px", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "12px", fontFamily: "monospace", color: "var(--text-secondary)" }}>
-              ARCHIVE_VIEWER // active_target: <span style={{ color: "var(--accent-premium)" }}>{stackSelecionada}</span>
-            </span>
-            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "monospace" }}>STATUS: READ_ONLY</span>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", flex: 1 }}>
-            
-            {/* Mini Árvore de Arquivos */}
-            <div style={{ borderRight: "1px solid var(--border-subtle)", padding: "24px 20px", display: "flex", flexDirection: "column", gap: "10px" }}>
-              <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Manifest Tree</span>
-              {previewsDasStacks[stackSelecionada].arquivos.map((file) => (
-                <div 
-                  key={file} 
-                  style={{ 
-                    fontSize: "13px", 
-                    fontFamily: "monospace", 
-                    color: file === previewsDasStacks[stackSelecionada].arquivoAtivo ? "var(--accent-premium)" : "var(--text-secondary)",
-                    padding: "4px 0"
-                  }}
-                >
-                  {file === previewsDasStacks[stackSelecionada].arquivoAtivo ? "• " : "  "} {file}
-                </div>
-              ))}
-            </div>
-
-            {/* Visualizador de Código */}
-            <div style={{ padding: "24px 30px", overflow: "auto" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
-                <span style={{ fontSize: "12px", fontFamily: "monospace", color: "var(--text-secondary)" }}>
-                  {previewsDasStacks[stackSelecionada].arquivoAtivo}
-                </span>
-              </div>
-              <pre style={{ 
-                margin: 0, 
-                fontFamily: "Consolas, 'Fira Code', Monaco, monospace", 
-                fontSize: "13px", 
-                lineHeight: "1.6", 
-                color: "#a78bfa", 
-                whiteSpace: "pre-wrap" 
-              }}>
-                {previewsDasStacks[stackSelecionada].codigo}
-              </pre>
-            </div>
-
           </div>
 
         </div>

@@ -16,7 +16,7 @@ export default function Cadastro() {
     setErro(""); setSucesso("");
 
     if (senha !== confirmarSenha) {
-      setErro("Verification threshold mismatch. Verify password parameters.");
+      setErro("As senhas informadas não coincidem.");
       return;
     }
 
@@ -30,10 +30,10 @@ export default function Cadastro() {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.erro || "Registration rejected.");
+      if (!response.ok) throw new Error(data.erro || "Falha ao criar o registro.");
 
-      setSucesso("Registry successfully committed. Routing to auth gateway...");
-      setTimeout(() => navigate("/login"), 1800);
+      setSucesso("Conta criada com sucesso! Redirecionando para o login...");
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setErro(err.message);
     } finally {
@@ -42,38 +42,38 @@ export default function Cadastro() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg-dark-obsidian)", padding: "20px" }}>
-      <div style={{ backgroundColor: "var(--bg-card-charcoal)", padding: "40px", border: "1px solid var(--border-subtle)", width: "100%", maxWidth: "420px", borderRadius: "8px" }}>
-        <h2 style={{ color: "#fff", fontSize: "20px", margin: "0 0 6px 0", fontWeight: "700" }}>Provision Account Node</h2>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px", margin: "0 0 24px 0" }}>Deploy your credentials to the centralized user table registry.</p>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div style={{ backgroundColor: "var(--bg-card)", padding: "40px", border: "1px solid var(--border-glow)", width: "100%", maxWidth: "420px", borderRadius: "12px" }}>
+        <h2 style={{ color: "#fff", fontSize: "22px", margin: "0 0 8px 0", fontWeight: "600" }}>Criar Nova Conta</h2>
+        <p style={{ color: "var(--text-muted)", fontSize: "14px", margin: "0 0 24px 0" }}>Registre suas credenciais para começar.</p>
 
-        {erro && <div style={{ color: "var(--color-error)", border: "1px solid var(--color-error)", padding: "10px", marginBottom: "20px", fontSize: "13px", fontFamily: "monospace" }}>ERROR: {erro}</div>}
-        {sucesso && <div style={{ color: "var(--color-success)", border: "1px solid var(--color-success)", padding: "10px", marginBottom: "20px", fontSize: "13px", fontFamily: "monospace" }}>{sucesso}</div>}
+        {erro && <div style={{ color: "#f87171", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid #ef4444", padding: "12px", borderRadius: "6px", marginBottom: "20px", fontSize: "13px" }}>{erro}</div>}
+        {sucesso && <div style={{ color: "#34d399", backgroundColor: "rgba(16, 185, 129, 0.1)", border: "1px solid #10b981", padding: "12px", borderRadius: "6px", marginBottom: "20px", fontSize: "13px" }}>{sucesso}</div>}
 
         <form onSubmit={handleCadastro} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div>
-            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-secondary)", fontSize: "12px", fontWeight: "600" }}>SYSTEM_IDENTITY_NAME</label>
-            <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} style={{ width: "100%", padding: "12px", backgroundColor: "var(--bg-input-dark)", border: "1px solid var(--border-subtle)", color: "#fff", outline: "none", fontSize: "14px" }} placeholder="e.g. Ítalo J." required />
+            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-main)", fontSize: "13px" }}>Nome Completo</label>
+            <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} style={{ width: "100%", padding: "12px", backgroundColor: "var(--bg-input)", border: "1px solid var(--border-glow)", borderRadius: "8px", color: "#fff", outline: "none", fontSize: "14px" }} placeholder="Ex: Ítalo" required />
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-secondary)", fontSize: "12px", fontWeight: "600" }}>REGISTRY_EMAIL_ENDPOINT</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: "100%", padding: "12px", backgroundColor: "var(--bg-input-dark)", border: "1px solid var(--border-subtle)", color: "#fff", outline: "none", fontSize: "14px" }} placeholder="user@domain.com" required />
+            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-main)", fontSize: "13px" }}>E-mail</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: "100%", padding: "12px", backgroundColor: "var(--bg-input)", border: "1px solid var(--border-glow)", borderRadius: "8px", color: "#fff", outline: "none", fontSize: "14px" }} placeholder="seu@email.com" required />
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-secondary)", fontSize: "12px", fontWeight: "600" }}>INTEGRITY_PASSWORD</label>
-            <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} style={{ width: "100%", padding: "12px", backgroundColor: "var(--bg-input-dark)", border: "1px solid var(--border-subtle)", color: "#fff", outline: "none", fontSize: "14px" }} placeholder="••••••••" required />
+            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-main)", fontSize: "13px" }}>Senha</label>
+            <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} style={{ width: "100%", padding: "12px", backgroundColor: "var(--bg-input)", border: "1px solid var(--border-glow)", borderRadius: "8px", color: "#fff", outline: "none", fontSize: "14px" }} placeholder="••••••••" required />
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-secondary)", fontSize: "12px", fontWeight: "600" }}>CONFIRM_INTEGRITY_PASSWORD</label>
-            <input type="password" value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} style={{ width: "100%", padding: "12px", backgroundColor: "var(--bg-input-dark)", border: "1px solid var(--border-subtle)", color: "#fff", outline: "none", fontSize: "14px" }} placeholder="••••••••" required />
+            <label style={{ display: "block", marginBottom: "6px", color: "var(--text-main)", fontSize: "13px" }}>Confirmar Senha</label>
+            <input type="password" value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} style={{ width: "100%", padding: "12px", backgroundColor: "var(--bg-input)", border: "1px solid var(--border-glow)", borderRadius: "8px", color: "#fff", outline: "none", fontSize: "14px" }} placeholder="••••••••" required />
           </div>
 
-          <button type="submit" disabled={loading} style={{ width: "100%", padding: "14px", backgroundColor: "var(--accent-premium)", border: "none", color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer", marginTop: "12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            {loading ? "Committing records..." : "Deploy Active Session Token"}
+          <button type="submit" disabled={loading} style={{ width: "100%", padding: "14px", backgroundColor: "var(--accent)", border: "none", borderRadius: "8px", color: "#fff", fontWeight: "600", fontSize: "14px", cursor: "pointer", marginTop: "12px" }}>
+            {loading ? "Criando Registro..." : "Concluir Cadastro"}
           </button>
         </form>
-        <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginTop: "24px", textAlign: "center", margin: "24px 0 0 0" }}>
-          Already mapped? <Link to="/login" style={{ color: "var(--accent-premium)", textDecoration: "none", fontWeight: "600" }}>Sign In Gate</Link>
+        <p style={{ color: "var(--text-muted)", fontSize: "14px", marginTop: "24px", textAlign: "center" }}>
+          Já tem acesso? <Link to="/login" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: "500" }}>Fazer Login</Link>
         </p>
       </div>
     </div>
